@@ -1,5 +1,6 @@
 <script>
-	import Trendcard from "../components/Trendcard.svelte";
+	import LeftCard from "../components/LeftCard.svelte";
+	import RightCard from "../components/RightCard.svelte";
 
 
 </script>
@@ -9,19 +10,46 @@
   <div class="hero-overlay bg-opacity-60"></div>
   <div class="hero-content text-neutral-content text-center">
     <div class="max-w-md">
-      <h1 class="mb-5 text-5xl font-bold fade-in-text" style="text-shadow: 7px 7px 2px #01030a;">
+      <h1 class="mb-5 text-4xl font-bold fade-in-text" style="text-shadow: 7px 7px 2px #01030a;">
         Welcome to CrimeLens LA
       </h1>
     </div>
   </div>
 </div>
-
-<Trendcard
-    imageSrc="https://datawrapper.dwcdn.net/y5Sm6/full.png"
+<RightCard
+    imageSrc="/images/Long-term.png"
     title="Long-Term Trends" 
     description="Track crime rates over the past years and compare crime categories such as theft, assault, and burglary. Adjust the time period and location to see how crime evolves in different regions" 
     buttonText="Analyze Crime Trends" 
     buttonLink="/long-term"
+/>
+<LeftCard
+    imageSrc="/images/Long-term.png"
+    title="Demographic Influence on Crime" 
+    description="Understand the influence of demographic factors like age, gender, and descent on crime patterns. Filter by specific regions and crime types to get detailed insights." 
+    buttonText="Explore by Demographics" 
+    buttonLink="/demographic"
+/>
+<RightCard
+    imageSrc="/images/Seasonal.png"
+    title="Seasonal Insights" 
+    description="Examine how crime patterns shift during different seasons, months, and holidays. Find out which times of the year experience the highest or lowest crime rates." 
+    buttonText="Discover Seasonal Crime Patterns" 
+    buttonLink="/seasonal"
+/>
+<LeftCard
+imageSrc="/images/Geographic.png"
+title="Geographic Hotspots" 
+description="Use our interactive heatmap to visualize crime density across neighborhoods. Zoom in on specific areas or filter by crime type to identify crime hotspots." 
+buttonText="View Crime Hotspots" 
+buttonLink="/geographic"
+/>
+<RightCard
+    imageSrc="/images/ExternalEvents.png"
+    title="Impact of External Events" 
+    description="Analyze how major events, like the COVID-19 pandemic or natural disasters, affect crime rates. Compare crime before, during, and after these events." 
+    buttonText="Event Based Analysis" 
+    buttonLink="/external-events"
 />
 <style>
 	@keyframes fadeIn {
