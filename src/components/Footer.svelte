@@ -1,11 +1,11 @@
 <footer class="footer footer-center bg-base-200 text-base-content rounded p-10">
     <nav class="grid grid-flow-col gap-4">
-      <a class="link link-hover">About us</a>
-      <a class="link link-hover">Contact</a>
+      <a class="link link-hover" href="/about">About us</a>
+      <a class="link link-hover"href="/contact">Contact</a>
     </nav>
     <nav>
       <div class="grid grid-flow-col gap-4">
-        <a href="https://github.com/yourusername" target="_blank" aria-label="GitHub">
+        <a href="https://github.com/Gretel8/CrimeLensLA" target="_blank" aria-label="GitHub">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
