@@ -13,8 +13,8 @@
 	let selectedCategories = writable<string[]>([]);
 	let selectedRegions = writable<string[]>([]);
 	let timeGranularity = 'Month';
-	let startDate = ''; // Placeholder for date range picker
-	let endDate = ''; // Placeholder for date range picker
+	let startDate = $state(''); // Placeholder for date range picker
+	let endDate = $state(''); // Placeholder for date range picker
 
 	function toggleSelection(array: string[], item: string) {
 		return array.includes(item) ? array.filter((i) => i !== item) : [...array, item];
@@ -62,7 +62,7 @@
 						<div class="mb-2 mr-6 inline items-center">
 							<input
 								type="checkbox"
-								on:change={() =>
+								onchange={() =>
 									selectedCategories.set(toggleSelection($selectedCategories, category))}
 								class="checkbox-primary checkbox mr-1"
 								checked={$selectedCategories.includes(category)}
@@ -79,7 +79,7 @@
 						<div class="mb-2 mr-6 flex items-center">
 							<input
 								type="checkbox"
-								on:change={() => selectedRegions.set(toggleSelection($selectedRegions, region))}
+								onchange={() => selectedRegions.set(toggleSelection($selectedRegions, region))}
 								class="checkbox-primary checkbox mr-2"
 								checked={$selectedRegions.includes(region)}
 							/>
@@ -120,7 +120,7 @@
 				</div>
 				<!-- Generate Trend Button -->
 				<div class="flex w-full justify-center pt-2">
-					<button on:click={generateTrend} class="btn btn-primary w-60 text-base"
+					<button onclick={generateTrend} class="btn btn-primary w-60 text-base"
 						>Generate Crime Trend</button
 					>
 				</div>
