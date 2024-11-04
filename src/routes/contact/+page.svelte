@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import emailjs from 'emailjs-com';
 
-	let firstName = '';
-	let lastName = '';
-	let email = '';
-	let message = '';
+	let firstName = $state('');
+	let lastName = $state('');
+	let email = $state('');
+	let message = $state('');
 
 	async function handleSubmit(event) {
 		event.preventDefault();
@@ -43,7 +43,7 @@
 			We're here to help. Reach out to us with any questions or concerns.
 		</p>
 
-		<form on:submit={handleSubmit} class="space-y-4">
+		<form onsubmit={handleSubmit} class="space-y-4">
 			<div>
 				<label class="mb-1 block text-sm font-medium">First Name</label>
 				<input type="text" bind:value={firstName} class="w-full rounded-lg border p-2" required />
