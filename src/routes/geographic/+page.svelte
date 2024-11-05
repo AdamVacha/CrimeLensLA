@@ -1,15 +1,12 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 
 	// Placeholder data for options
 	const crimeCategories = ['Theft', 'Assault', 'Burglary'];
 	const laRegions = ['Central', 'East', 'West', 'South', 'North'];
 
-	// State variables for selected options
 	let selectedCategories = writable<string[]>([]);
 	let selectedRegions = writable<string[]>([]);
-	let timeGranularity = 'Month';
 	let startDate = $state(''); // Placeholder for date range picker
 	let endDate = $state(''); // Placeholder for date range picker
 
@@ -18,7 +15,6 @@
 	}
 
 	function generateTrend() {
-		// Placeholder function for generating trend chart
 		console.log('Selected Categories:', $selectedCategories);
 		console.log('Selected Regions:', $selectedRegions);
 		console.log('Generating crime trend...');
@@ -26,7 +22,7 @@
 </script>
 
 <div class="flex min-h-screen justify-center p-10 text-black">
-	<div class="w-full max-w-6xl rounded-lg bg-white p-8 pb-20 shadow-lg">
+	<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
 		<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
 			Geographic Variation in Crime
 		</h1>
@@ -86,15 +82,13 @@
 				</div>
 
 				<!-- Generate Trend Button -->
-				<div class="flex w-full justify-center pt-2">
-					<button onclick={generateTrend} class="btn btn-primary w-60 text-base"
-						>Generate Crime Trend</button
-					>
+				<div class="flex w-full justify-center pt-4">
+					<button onclick={generateTrend} class="btn btn-primary w-60 text-base">Update Map</button>
 				</div>
 			</div>
 
 			<!-- Right Column: Chart Placeholder -->
-			<div class="flex items-center justify-center rounded-lg bg-gray-100 p-6 shadow-inner">
+			<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
 				<!-- Placeholder for the Chart -->
 				<div class="text-center">
 					<h2 class="mb-4 text-xl font-semibold">Chart Title</h2>
