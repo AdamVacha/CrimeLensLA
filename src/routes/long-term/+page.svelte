@@ -26,10 +26,10 @@
 </script>
 
 <div class="flex min-h-screen justify-center p-10 text-black">
-	<div class="w-full max-w-6xl rounded-lg bg-white p-8 pb-20 shadow-lg">
+	<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
 		<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">Long-Term Crime Trends</h1>
 
-		<div class="grid grid-cols-1 gap-8 lg:grid-cols-[38%_60%]">
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 			<!-- Left Column: Controls -->
 			<div class="space-y-6 text-base">
 				<!-- Date Range Picker -->
@@ -85,6 +85,7 @@
 
 				<!-- Time Granularity Radio Buttons -->
 				<div>
+					<!-- svelte-ignore a11y_label_has_associated_control -->
 					<label class="mb-2 block font-medium">Adjust Time Granularity:</label>
 					<div class="flex space-x-4">
 						<label class="flex items-center space-x-2">
@@ -121,15 +122,15 @@
 				</div>
 
 				<!-- Generate Trend Button -->
-				<div class="flex w-full justify-center pt-2">
-					<button onclick={generateTrend} class="btn btn-primary w-60 text-base"
+				<div class="flex w-full justify-center pt-4">
+					<button onclick={generateTrend} class="btn btn-primary mt-6 w-60 text-base"
 						>Generate Crime Trend</button
 					>
 				</div>
 			</div>
 
 			<!-- Right Column: Chart Placeholder -->
-			<div class="flex items-center justify-center rounded-lg bg-gray-100 p-6 shadow-inner">
+			<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
 				<!-- Placeholder for the Chart -->
 				<div class="text-center">
 					<h2 class="mb-4 text-xl font-semibold">Chart Title</h2>
