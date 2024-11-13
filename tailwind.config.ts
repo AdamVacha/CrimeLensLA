@@ -14,6 +14,6 @@ export default {
 
 	plugins: [typography, forms, containerQueries, aspectRatio, daisyui],
 	daisyui: {
-		themes: ['night']
+		themes: ['night', 'light', 'dark, cupcake']
 	}
 } satisfies Config;
