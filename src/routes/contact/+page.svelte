@@ -7,6 +7,9 @@
 	let email = $state('');
 	let message = $state('');
 
+	/**
+	 * @param {{ preventDefault: () => void; }} event
+	 */
 	async function handleSubmit(event) {
 		event.preventDefault();
 
