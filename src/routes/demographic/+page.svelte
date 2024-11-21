@@ -6,8 +6,8 @@
 	let { data } = $props();
 
 	// Placeholder data for options
-	const crimeCategories = ['Theft', 'Assault', 'Burglary'];
-	const laRegions = ['Central', 'East', 'West', 'South', 'North'];
+	const crimeCategories = ['Violent', 'Property', 'Fraud'];
+	const laRegions = ['North', 'South', 'Central', 'East', 'West', 'ALL'];
 	const victimAge = ['0-18', '19-30', '31-50', '51+'];
 	const victimGender = ['Female', 'Male', 'Other'];
 	const victimDescent = ['Asian', 'Black', 'Hispanic', 'White', 'Other'];
@@ -54,15 +54,20 @@
 			(value) => value !== e.currentTarget.value
 		);
 	}
-	function onRegionChange(e: { currentTarget: { checked: boolean; value: string } }) {
-		// if checked add to array
-		if (e.currentTarget.checked) {
-			formData.laRegions.push(e.currentTarget.value);
-			return;
+
+	const regionCheckAll = (e: Event, region: string) => {
+		if (region === 'ALL') {
+			formData.laRegions = (e.target as HTMLInputElement).checked
+				? laRegions.filter((r) => r !== 'ALL')
+				: [];
+		} else {
+			if ((e.target as HTMLInputElement).checked) {
+				formData.laRegions = [...formData.laRegions, region];
+			} else {
+				formData.laRegions = formData.laRegions.filter((r) => r !== region);
+			}
 		}
-		// if not checked, keep the rest of the regions
-		formData.laRegions = formData.laRegions.filter((value) => value !== e.currentTarget.value);
-	}
+	};
 </script>
 
 <form method="POST" onsubmit={handleSubmission}>
@@ -85,6 +90,8 @@
 							class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
 							placeholder="Start Date"
 							name="startDate"
+							min="2020-11-10"
+							max="2024-11-15"
 						/>
 						To
 						<input
@@ -93,6 +100,8 @@
 							class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
 							placeholder="End Date"
 							name="endDate"
+							min="2020-11-10"
+							max="2024-11-15"
 						/>
 					</div>
 
@@ -121,7 +130,7 @@
 							<div class="mb-2 mr-6 flex items-center">
 								<input
 									type="checkbox"
-									onchange={onRegionChange}
+									onchange={(e) => regionCheckAll(e, region)}
 									class="checkbox-primary checkbox mr-2"
 									value={region}
 									name="region"

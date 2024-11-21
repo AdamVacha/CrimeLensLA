@@ -1,4 +1,3 @@
-// src/lib/types.ts for serverside returns
 export interface CrimeRecord {
 	DR_NO: string;
 	Report_Date: string;
