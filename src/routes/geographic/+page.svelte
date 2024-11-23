@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { writable } from 'svelte/store';
+	import DateRangePicker from '../../components/DateRangePicker.svelte';
 
 	// Placeholder data for options
 	const crimeCategories = ['Theft', 'Assault', 'Burglary'];
@@ -30,23 +31,7 @@
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-[38%_60%]">
 			<!-- Left Column: Controls -->
 			<div class="space-y-6 text-base">
-				<!-- Date Range Picker -->
-				<div>
-					<label class="mb-2 block text-base font-medium">Select Date Range:</label>
-					<input
-						type="date"
-						bind:value={startDate}
-						class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-						placeholder="Start Date"
-					/>
-					To
-					<input
-						type="date"
-						bind:value={endDate}
-						class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-						placeholder="End Date"
-					/>
-				</div>
+				<DateRangePicker bind:startDate bind:endDate label="Select Date Range:" />
 
 				<!-- Crime Categories Multi-Select -->
 				<div>

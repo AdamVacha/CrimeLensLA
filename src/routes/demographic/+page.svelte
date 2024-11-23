@@ -1,16 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { Chart } from 'chart.js/auto';
+	import DateRangePicker from '../../components/DateRangePicker.svelte';
+	import CrimeCategoriesSelect from '../../components/CrimeCategoriesSelect.svelte';
+	import LARegionSelect from '../../components/LARegionSelect.svelte';
+	import VictimDemographicsSelect from '../../components/VictimDemographicsSelect.svelte';
+	import {
+		CRIME_CATEGORIES,
+		LA_REGIONS,
+		VICTIM_AGE,
+		VICTIM_GENDER,
+		VICTIM_DESCENT
+	} from '../../constants';
 
 	// Get data from server
 	let { data } = $props();
-
-	// Placeholder data for options
-	const crimeCategories = ['Violent', 'Property', 'Fraud'];
-	const laRegions = ['North', 'South', 'Central', 'East', 'West', 'ALL'];
-	const victimAge = ['0-18', '19-30', '31-50', '51+'];
-	const victimGender = ['Female', 'Male', 'Other'];
-	const victimDescent = ['Asian', 'Black', 'Hispanic', 'White', 'Other'];
 
 	// Form Data Storage (empty string by default or URL loaded)
 	let formData = $state({
@@ -25,6 +29,12 @@
 
 	function handleSubmission(e: any) {
 		e.preventDefault();
+
+		if (new Date(formData.endDate) < new Date(formData.startDate)) {
+			alert('End date cannot be before start date.');
+			return;
+		}
+
 		// intantiate URL parameters object
 		const params = new URLSearchParams();
 
@@ -43,31 +53,6 @@
 
 		goto(`/demographic?${params.toString()}`);
 	}
-	function onCrimeCategoryChange(e: { currentTarget: { checked: boolean; value: string } }) {
-		// if checked add to array
-		if (e.currentTarget.checked) {
-			formData.crimeCategories.push(e.currentTarget.value);
-			return;
-		}
-		// if not checked, keep the rest of the categories
-		formData.crimeCategories = formData.crimeCategories.filter(
-			(value) => value !== e.currentTarget.value
-		);
-	}
-
-	const regionCheckAll = (e: Event, region: string) => {
-		if (region === 'ALL') {
-			formData.laRegions = (e.target as HTMLInputElement).checked
-				? laRegions.filter((r) => r !== 'ALL')
-				: [];
-		} else {
-			if ((e.target as HTMLInputElement).checked) {
-				formData.laRegions = [...formData.laRegions, region];
-			} else {
-				formData.laRegions = formData.laRegions.filter((r) => r !== region);
-			}
-		}
-	};
 </script>
 
 <form method="POST" onsubmit={handleSubmission}>
@@ -83,106 +68,43 @@
 				<div class="space-y-6 text-base">
 					<!-- Date Range Picker -->
 					<div>
-						<label class="mb-2 block text-base font-medium">Select Date Range:</label>
-						<input
-							type="date"
-							bind:value={formData.startDate}
-							class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-							placeholder="Start Date"
-							name="startDate"
-							min="2020-11-10"
-							max="2024-11-15"
-						/>
-						To
-						<input
-							type="date"
-							bind:value={formData.endDate}
-							class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-							placeholder="End Date"
-							name="endDate"
-							min="2020-11-10"
-							max="2024-11-15"
+						<label for="date-range-picker" class="mb-2 block text-base font-medium"
+							>Select Date Range:</label
+						>
+						<DateRangePicker
+							startDate={formData.startDate}
+							endDate={formData.endDate}
+							minDate="2020-11-10"
+							maxDate="2024-11-15"
+							on:startDateChange={(e) => (formData.startDate = e.detail)}
+							on:endDateChange={(e) => (formData.endDate = e.detail)}
 						/>
 					</div>
 
-					<!-- Crime Categories Multi-Select -->
-					<div>
-						<label class="mb-2 block font-medium">Select Crime Categories:</label>
-						{#each crimeCategories as category}
-							<div class="mb-2 mr-6 inline items-center">
-								<input
-									type="checkbox"
-									onchange={onCrimeCategoryChange}
-									class="checkbox-primary checkbox mr-1"
-									value={category}
-									name="category"
-									checked={formData.crimeCategories.includes(category)}
-								/>
-								<span>{category}</span>
-							</div>
-						{/each}
-					</div>
+					<CrimeCategoriesSelect
+						categories={CRIME_CATEGORIES}
+						selectedCategories={formData.crimeCategories}
+						on:categoryChange={(e) => (formData.crimeCategories = e.detail)}
+					/>
 
-					<!-- LA Region Multi-Select -->
-					<div>
-						<label class="mb-2 block font-medium">Select LA Regions:</label>
-						{#each laRegions as region}
-							<div class="mb-2 mr-6 flex items-center">
-								<input
-									type="checkbox"
-									onchange={(e) => regionCheckAll(e, region)}
-									class="checkbox-primary checkbox mr-2"
-									value={region}
-									name="region"
-									checked={formData.laRegions.includes(region)}
-								/>
-								<span>{region}</span>
-							</div>
-						{/each}
-					</div>
+					<LARegionSelect
+						regions={LA_REGIONS}
+						selectedRegions={formData.laRegions}
+						on:regionChange={(e) => (formData.laRegions = e.detail)}
+					/>
 
-					<div class="space-y-6 text-base">
-						<!-- Victim Demographics -->
-						<div>
-							<label class="mb-2 block font-medium">Select Victim Demographics:</label>
+					<VictimDemographicsSelect
+						victimAge={VICTIM_AGE}
+						victimGender={VICTIM_GENDER}
+						victimDescent={VICTIM_DESCENT}
+						selectedAge={formData.ageRange}
+						selectedGender={formData.gender}
+						selectedDescent={formData.descent}
+						on:ageChange={(e) => (formData.ageRange = e.detail)}
+						on:genderChange={(e) => (formData.gender = e.detail)}
+						on:descentChange={(e) => (formData.descent = e.detail)}
+					/>
 
-							<!-- Age Group Dropdown -->
-							<select
-								bind:value={formData.ageRange}
-								class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
-								name="ageRange"
-							>
-								<option value="" disabled selected>Age Group</option>
-								{#each victimAge as age}
-									<option>{age}</option>
-								{/each}
-							</select>
-
-							<!-- Gender Dropdown -->
-							<select
-								bind:value={formData.gender}
-								class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
-								name="gender"
-							>
-								<option value="" disabled selected>Gender</option>
-								{#each victimGender as gender}
-									<option>{gender}</option>
-								{/each}
-							</select>
-
-							<!-- Descent Dropdown -->
-							<select
-								bind:value={formData.descent}
-								class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
-								name="descent"
-							>
-								<option value="" disabled selected>Descent</option>
-								{#each victimDescent as descent}
-									<option>{descent}</option>
-								{/each}
-							</select>
-						</div>
-					</div>
 					<!-- Generate Trend Button -->
 					<div class="flex w-full justify-center pt-4">
 						<button type="submit" class="btn btn-primary w-60 text-base"
@@ -204,9 +126,3 @@
 		</div>
 	</div>
 </form>
-
-<style>
-	.custom-calendar-icon::-webkit-calendar-picker-indicator {
-		filter: invert(50%);
-	}
-</style>
