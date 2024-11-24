@@ -30,11 +30,6 @@
 	function handleSubmission(e: any) {
 		e.preventDefault();
 
-		if (new Date(formData.endDate) < new Date(formData.startDate)) {
-			alert('End date cannot be before start date.');
-			return;
-		}
-
 		// intantiate URL parameters object
 		const params = new URLSearchParams();
 

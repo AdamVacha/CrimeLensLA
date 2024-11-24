@@ -33,14 +33,15 @@
 	}
 </script>
 
-<div>
-	<label class="mb-2 block font-medium">Select Victim Demographics:</label>
+<div id="victim-demographics">
+	<label for="victim-demographics" class="mb-2 block font-medium">Select Victim Demographics:</label
+	>
 
 	<!-- Age Group Dropdown -->
 	<select
 		bind:value={selectedAge}
 		class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
-		on:change={(e) => handleAgeChange(e.target.value)}
+		on:change={(e) => handleAgeChange((e.target as HTMLSelectElement).value ?? '')}
 	>
 		<option value="" disabled selected>Age Group</option>
 		{#each victimAge as age}
@@ -52,7 +53,7 @@
 	<select
 		bind:value={selectedGender}
 		class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
-		on:change={(e) => handleGenderChange(e.target.value)}
+		on:change={(e) => handleGenderChange((e.target as HTMLSelectElement).value ?? '')}
 	>
 		<option value="" disabled selected>Gender</option>
 		{#each victimGender as gender}
@@ -64,7 +65,7 @@
 	<select
 		bind:value={selectedDescent}
 		class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
-		on:change={(e) => handleDescentChange(e.target.value)}
+		on:change={(e) => handleDescentChange((e.target as HTMLSelectElement).value ?? '')}
 	>
 		<option value="" disabled selected>Descent</option>
 		{#each victimDescent as descent}
