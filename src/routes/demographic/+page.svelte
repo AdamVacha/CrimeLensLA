@@ -173,7 +173,7 @@
 					plugins: {
 						title: {
 							display: true,
-							text: `Monthly Crime Proportions by Demographics`,
+							text: `Crime Incidents by Demographics (${formData.startDate} to ${formData.endDate})`,
 							font: {
 								size: 16,
 								weight: 'bold'
@@ -207,16 +207,16 @@
 							},
 							ticks: {
 								callback: function (index) {
-									// Add extra space after December to visually separate years
+									// extra spacing after december
 									const label = months[index as number];
 									return label?.includes('Dec') ? label + '   ' : label;
 								},
-								maxRotation: 45, // Angle the labels for better readability
+								maxRotation: 45, // angle labels for better readability
 								minRotation: 45
 							},
 							grid: {
 								color: (context) => {
-									// Add darker gridline for January to mark year changes
+									// mark year changes
 									const label = months[context.index];
 									return label?.includes('Jan') ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)';
 								}
