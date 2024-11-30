@@ -15,16 +15,13 @@ export async function load({ url }) {
 	const locations = locationHelper(cP.laRegions);
 	// convert descent into ethnicities
 	const descent = ethnicityHelper(cP.descent);
-	// conver age into selected age groups
+	// convert age into selected age groups
 	const ageRange = ageHelper(cP.ageRange);
 	const ageCondition = ageRange
 		? ageRange.min === null
 			? 'AND v.AGE IS NULL'
 			: `AND v.AGE >= ${ageRange.min} AND v.AGE <= ${ageRange?.max}`
 		: '';
-
-	// TODO: implement demographic query
-	const queryParams = [crimeCodes];
 
 	// do not contact db server if page is empty
 	const hasFilters =
@@ -83,7 +80,6 @@ export async function load({ url }) {
 
 	const result = await connection.execute(query);
 	console.log('=========SPACE============');
-	console.log('Query Params: ', queryParams);
 	console.log('Start Date: ', cP.startDate);
 	console.log('End Date: ', cP.endDate);
 	console.log('CrimeType: ', cP.crimeCategories);

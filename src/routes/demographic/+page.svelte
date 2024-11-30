@@ -117,6 +117,8 @@
 			>();
 
 			typedRows.forEach((row) => {
+				// TODO fix getAgeGroup (formData.age !=)
+
 				const key = `${row.ethnicity}-${row.gender}-${getAgeGroup(row.age)}`;
 
 				if (!demographicMap.has(key)) {

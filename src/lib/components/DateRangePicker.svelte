@@ -2,9 +2,10 @@
 	// updated from event dispatch handler to props rune
 	// TODO move all components in /src/components to /src/lib/components
 	// TODO copy updated rune logic from DateRangePicker to other components
+	// TODO get start and end date to present as defaults instead of current date
 	let {
-		startDate = '',
-		endDate = '',
+		startDate = '2020-11-10',
+		endDate = '2024-11-15',
 		minDate,
 		maxDate,
 		onStartDateChange = (date: string) => {},
