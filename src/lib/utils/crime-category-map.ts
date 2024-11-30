@@ -1,4 +1,4 @@
-export const CRIME_CODES = new Map([
+export const CRIME_CODES_MAP = new Map([
 	[
 		'Violent',
 		[

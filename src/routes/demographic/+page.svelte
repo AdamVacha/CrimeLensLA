@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { Chart } from 'chart.js/auto';
-	import { onMount } from 'svelte';
 	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
-	import CrimeCategoriesSelect from '../../components/CrimeCategoriesSelect.svelte';
-	import LARegionSelect from '../../components/LARegionSelect.svelte';
-	import VictimDemographicsSelect from '../../components/VictimDemographicsSelect.svelte';
+	import CrimeCategoriesSelect from '$lib/components/CrimeCategoriesSelect.svelte';
+	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
+	import VictimDemographicsSelect from '$lib/components/VictimDemographicsSelect.svelte';
 	import {
 		CRIME_CATEGORIES,
 		LA_REGIONS,
@@ -13,8 +12,8 @@
 		VICTIM_GENDER,
 		VICTIM_DESCENT
 	} from '../../constants';
-	import { getAgeGroup } from '$lib/utils/age-helper';
 	import { getChartColor } from '$lib/utils/chart-colors';
+	import { LA_REGIONS_MAP } from '$lib/utils/location-map';
 
 	// Get data from server
 	let { data } = $props();
@@ -73,6 +72,7 @@
 				crimeCode: string;
 				crimeDesc: string;
 				date: string;
+				location: string;
 				ethnicity: string;
 				gender: string;
 				age: number;
@@ -93,19 +93,13 @@
 						crimeCode: row[0],
 						crimeDesc: row[1],
 						date: formatDate(row[2]),
-						ethnicity: row[3],
-						gender: row[4],
-						age: row[5],
-						incidentCount: row[6]
+						location: row[3],
+						ethnicity: row[4],
+						gender: row[5],
+						age: row[6],
+						incidentCount: row[7]
 					}) satisfies crimeRow
 			);
-
-			// calc monthly totals for proportions
-			const monthlyTotals = new Map<string, number>();
-			typedRows.forEach((row) => {
-				const currentTotal = monthlyTotals.get(row.date) || 0;
-				monthlyTotals.set(row.date, currentTotal + row.incidentCount);
-			});
 
 			// group by demographics and proportion
 			const demographicMap = new Map<
@@ -116,22 +110,48 @@
 				}
 			>();
 
+			// track most common crime committed at that location from all those crimes
+			const crimeStats = $state(new Map<string, Map<string, { crime: string; count: number }>>());
+
 			typedRows.forEach((row) => {
-				const key = `${row.ethnicity}-${row.gender}-${getAgeGroup(row.age)}`;
+				let key = '';
+
+				// set key to region name of crime commited
+				for (const [regionName, areas] of LA_REGIONS_MAP.entries()) {
+					if (areas.includes(row.location)) {
+						key = regionName;
+					}
+				}
+				// if this region deoesnt exist, store date -> crime data in new map
+				if (!crimeStats.has(key)) {
+					crimeStats.set(key, new Map());
+				}
+				// get map of all dates for this region or if we havnt tracked this date yet, instantiate it
+				const regionMap = crimeStats.get(key)!;
+				if (!regionMap.has(row.date)) {
+					regionMap.set(row.date, { crime: row.crimeDesc, count: 0 });
+				}
+				// get current crime stats on this date, store most committed crime
+				const currentStats = regionMap.get(row.date)!;
+				if (row.incidentCount > currentStats.count) {
+					currentStats.crime = row.crimeDesc;
+					currentStats.count = row.incidentCount;
+				}
 
 				if (!demographicMap.has(key)) {
 					demographicMap.set(key, {
-						label: `${row.ethnicity} ${row.gender} ${getAgeGroup(row.age)}`,
+						label: key,
 						monthlyData: new Map()
 					});
 				}
-
-				// retrieve existing entry from map
+				// get all demographic data at region
 				const entry = demographicMap.get(key)!;
-				const monthTotal = monthlyTotals.get(row.date) || 1;
+
+				// get current incident count
 				const currentCount = entry.monthlyData.get(row.date) || 0;
-				// calc percentage
-				entry.monthlyData.set(row.date, ((currentCount + row.incidentCount) / monthTotal) * 100);
+
+				// add new incidents to total count for this date
+				entry.monthlyData.set(row.date, currentCount + row.incidentCount);
 			});
 
 			// convert datasets
@@ -188,8 +208,18 @@
 						tooltip: {
 							callbacks: {
 								label: (context) => {
+									// retrieve total incidents
 									const value = context.raw as number;
-									return `${value.toFixed(1)}% of incidents`;
+
+									// get crime and incident count per region and date
+									const region = context.dataset.label;
+									const date = months[context.dataIndex];
+									const stats = region ? crimeStats.get(region)?.get(date) : undefined;
+
+									return [
+										`${value} incidents`,
+										`Most common crime: ${stats?.crime || 'None'} with: ${stats?.count || 0} incidents`
+									];
 								}
 							}
 						}
@@ -199,7 +229,7 @@
 							beginAtZero: true,
 							title: {
 								display: true,
-								text: 'Percentage of Total Incidents'
+								text: 'Number of Incidents'
 							}
 						},
 						x: {
@@ -270,13 +300,13 @@
 					<CrimeCategoriesSelect
 						categories={CRIME_CATEGORIES}
 						selectedCategories={formData.crimeCategories}
-						on:categoryChange={(e) => (formData.crimeCategories = e.detail)}
+						onCategoryChange={(categories: any) => (formData.crimeCategories = categories)}
 					/>
 
-					<LARegionSelect
+					<LaRegionSelect
 						regions={LA_REGIONS}
 						selectedRegions={formData.laRegions}
-						on:regionChange={(e) => (formData.laRegions = e.detail)}
+						onRegionChange={(regions: any) => (formData.laRegions = regions)}
 					/>
 
 					<VictimDemographicsSelect
@@ -286,9 +316,9 @@
 						selectedAge={formData.ageRange}
 						selectedGender={formData.gender}
 						selectedDescent={formData.descent}
-						on:ageChange={(e) => (formData.ageRange = e.detail)}
-						on:genderChange={(e) => (formData.gender = e.detail)}
-						on:descentChange={(e) => (formData.descent = e.detail)}
+						onAgeChange={(age: any) => (formData.ageRange = age)}
+						onGenderChange={(gender: any) => (formData.gender = gender)}
+						onDescentChange={(descent: any) => (formData.descent = descent)}
 					/>
 
 					<!-- Generate Trend Button -->

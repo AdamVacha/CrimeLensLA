@@ -1,8 +1,8 @@
 <script>
-	import LeftCard from '../components/InvertedFeatureCard.svelte';
-	import RightCard from '../components/FeatureCard.svelte';
-	import FeatureCard from '../components/FeatureCard.svelte';
-	import InvertedFeatureCard from '../components/InvertedFeatureCard.svelte';
+	import LeftCard from '../lib/components/InvertedFeatureCard.svelte';
+	import RightCard from '../lib/components/FeatureCard.svelte';
+	import FeatureCard from '../lib/components/FeatureCard.svelte';
+	import InvertedFeatureCard from '../lib/components/InvertedFeatureCard.svelte';
 </script>
 
 <div
