@@ -1,4 +1,4 @@
-import { CRIME_CODES } from './crime-category-map';
+import { CRIME_CODES_MAP } from './crime-category-map';
 
 export function crimeCodeHelper(selectedCategories: string[]): string[] {
 	//handle no category selected
@@ -7,7 +7,7 @@ export function crimeCodeHelper(selectedCategories: string[]): string[] {
 	}
 	// combine codes into single array
 	const crimeCodes = selectedCategories.reduce((codes, category) => {
-		const categoryCodes = CRIME_CODES.get(category) || [];
+		const categoryCodes = CRIME_CODES_MAP.get(category) || [];
 		return [...codes, ...categoryCodes];
 	}, [] as string[]);
 	// return sorted array

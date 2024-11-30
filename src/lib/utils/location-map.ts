@@ -1,4 +1,4 @@
-export const LA_REGIONS = new Map([
+export const LA_REGIONS_MAP = new Map([
 	[
 		'North',
 		['Devonshire', 'Foothill', 'Mission', 'N Hollywood', 'Van Nuys', 'West Valley', 'Topanga']
