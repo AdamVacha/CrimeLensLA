@@ -7,7 +7,8 @@ export function crimeCodeHelper(selectedCategories: string[]): string[] {
 	}
 	// combine codes into single array
 	const crimeCodes = selectedCategories.reduce((codes, category) => {
-		return [...codes, ...(CRIME_CODES[category as keyof typeof CRIME_CODES] || [])];
+		const categoryCodes = CRIME_CODES.get(category) || [];
+		return [...codes, ...categoryCodes];
 	}, [] as string[]);
 	// return sorted array
 	return [...new Set(crimeCodes)].sort();

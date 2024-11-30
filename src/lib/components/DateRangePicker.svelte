@@ -1,30 +1,33 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
-	export let startDate = '';
-	export let endDate = '';
-	export let minDate: string;
-	export let maxDate: string;
-
-	const dispatch = createEventDispatcher();
+	// updated from event dispatch handler to props rune
+	// TODO move all components in /src/components to /src/lib/components
+	// TODO copy updated rune logic from DateRangePicker to other components
+	let {
+		startDate = '',
+		endDate = '',
+		minDate,
+		maxDate,
+		onStartDateChange = (date: string) => {},
+		onEndDateChange = (date: string) => {}
+	} = $props();
 
 	const updateStartDate = (e: Event) => {
 		const newStartDate = (e.target as HTMLInputElement).value;
-		dispatch('startDateChange', newStartDate);
+		onStartDateChange(newStartDate);
 
-		// Ensure endDate respects the updated startDate
+		// ensure enddate respects updated startdate
 		if (new Date(endDate) < new Date(newStartDate)) {
-			dispatch('endDateChange', newStartDate);
+			onEndDateChange(newStartDate);
 		}
 	};
 
 	const updateEndDate = (e: Event) => {
 		const newEndDate = (e.target as HTMLInputElement).value;
-		dispatch('endDateChange', newEndDate);
+		onEndDateChange(newEndDate);
 
-		// Ensure startDate respects the updated endDate
+		// ensure startdate respects updated enddate
 		if (new Date(startDate) > new Date(newEndDate)) {
-			dispatch('startDateChange', newEndDate);
+			onStartDateChange(newEndDate);
 		}
 	};
 </script>
@@ -37,7 +40,7 @@
 		min={minDate}
 		max={endDate || maxDate}
 		class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-		on:input={updateStartDate}
+		oninput={updateStartDate}
 	/>
 
 	<!-- End Date Input -->
@@ -47,7 +50,7 @@
 		min={startDate || minDate}
 		max={maxDate}
 		class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-		on:input={updateEndDate}
+		oninput={updateEndDate}
 	/>
 </div>
 
