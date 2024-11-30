@@ -15,7 +15,7 @@
 		const newStartDate = (e.target as HTMLInputElement).value;
 		onStartDateChange(newStartDate);
 
-		// Ensure endDate respects the updated startDate
+		// ensure enddate respects updated startdate
 		if (new Date(endDate) < new Date(newStartDate)) {
 			onEndDateChange(newStartDate);
 		}
@@ -25,7 +25,7 @@
 		const newEndDate = (e.target as HTMLInputElement).value;
 		onEndDateChange(newEndDate);
 
-		// Ensure startDate respects the updated endDate
+		// ensure startdate respects updated enddate
 		if (new Date(startDate) > new Date(newEndDate)) {
 			onStartDateChange(newEndDate);
 		}
