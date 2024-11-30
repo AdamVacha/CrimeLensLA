@@ -165,6 +165,11 @@
 				options: {
 					responsive: true,
 					maintainAspectRatio: false,
+					animation: {
+						onComplete: () => {
+							isLoading = false;
+						}
+					},
 					plugins: {
 						title: {
 							display: true,

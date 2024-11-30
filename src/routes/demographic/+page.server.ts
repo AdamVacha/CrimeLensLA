@@ -26,6 +26,7 @@ export async function load({ url }) {
 	// TODO: implement demographic query
 	const queryParams = [crimeCodes];
 
+	// do not contact server if page is empty
 	const hasFilters =
 		cP.crimeCategories?.length > 0 ||
 		cP.laRegions?.length > 0 ||
@@ -36,7 +37,7 @@ export async function load({ url }) {
 		cP.ageRange;
 
 	if (!hasFilters) {
-		// No filters provided, return an empty result
+		// no filters = empty result
 		return {
 			formParams: cP,
 			result: {
