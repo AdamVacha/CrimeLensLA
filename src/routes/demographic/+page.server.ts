@@ -26,7 +26,7 @@ export async function load({ url }) {
 	// TODO: implement demographic query
 	const queryParams = [crimeCodes];
 
-	// do not contact server if page is empty
+	// do not contact db server if page is empty
 	const hasFilters =
 		cP.crimeCategories?.length > 0 ||
 		cP.laRegions?.length > 0 ||
@@ -94,7 +94,7 @@ export async function load({ url }) {
 	console.log('Descent: ', cP.descent);
 	console.log('SQL Query:', query);
 
-	// This data gets returned to the page component
+	// this data gets returned to the page component
 	return {
 		formParams: cP,
 		result: {

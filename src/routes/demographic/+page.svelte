@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { Chart } from 'chart.js/auto';
 	import { onMount } from 'svelte';
-	import DateRangePicker from '../../components/DateRangePicker.svelte';
+	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import CrimeCategoriesSelect from '../../components/CrimeCategoriesSelect.svelte';
 	import LARegionSelect from '../../components/LARegionSelect.svelte';
 	import VictimDemographicsSelect from '../../components/VictimDemographicsSelect.svelte';
@@ -79,7 +79,6 @@
 				incidentCount: number;
 			};
 
-			// Format date to "MMM YYYY" (e.g., "Jan 2020")
 			const formatDate = (dateStr: string) => {
 				const date = new Date(dateStr);
 				return date.toLocaleDateString('en-US', {
@@ -101,14 +100,14 @@
 					}) satisfies crimeRow
 			);
 
-			// Calculate monthly totals for proportions
+			// calc monthly totals for proportions
 			const monthlyTotals = new Map<string, number>();
 			typedRows.forEach((row) => {
 				const currentTotal = monthlyTotals.get(row.date) || 0;
 				monthlyTotals.set(row.date, currentTotal + row.incidentCount);
 			});
 
-			// Group by demographics and calculate proportions
+			// group by demographics and proportion
 			const demographicMap = new Map<
 				string,
 				{
@@ -127,13 +126,15 @@
 					});
 				}
 
+				// retrieve existing entry from map
 				const entry = demographicMap.get(key)!;
 				const monthTotal = monthlyTotals.get(row.date) || 1;
 				const currentCount = entry.monthlyData.get(row.date) || 0;
+				// calc percentage
 				entry.monthlyData.set(row.date, ((currentCount + row.incidentCount) / monthTotal) * 100);
 			});
 
-			// Convert to datasets
+			// convert datasets
 			const datasets = Array.from(demographicMap.values())
 				.map(
 					(demo, index) =>
@@ -151,11 +152,12 @@
 				)
 				.slice(0, 10);
 
-			// Get months sorted chronologically
+			// sort months chronilogically
 			const months = [...new Set(typedRows.map((row) => row.date))].sort(
 				(a, b) => new Date(a).getTime() - new Date(b).getTime()
 			);
 
+			// instantiate chart
 			chart = new Chart(chartCanvas, {
 				type: 'line',
 				data: {
@@ -211,7 +213,7 @@
 									const label = months[index as number];
 									return label?.includes('Dec') ? label + '   ' : label;
 								},
-								maxRotation: 45, // angle labels for better readability
+								maxRotation: 45, // angle labels
 								minRotation: 45
 							},
 							grid: {
