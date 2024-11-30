@@ -73,11 +73,19 @@
 				crimeCode: string;
 				crimeDesc: string;
 				date: string;
-				location: string;
 				ethnicity: string;
 				gender: string;
 				age: number;
 				incidentCount: number;
+			};
+
+			// Format date to "MMM YYYY" (e.g., "Jan 2020")
+			const formatDate = (dateStr: string) => {
+				const date = new Date(dateStr);
+				return date.toLocaleDateString('en-US', {
+					month: 'short',
+					year: 'numeric'
+				});
 			};
 
 			const typedRows = data.result.rows.map(
@@ -85,61 +93,82 @@
 					({
 						crimeCode: row[0],
 						crimeDesc: row[1],
-						date: new Date(row[2]).toLocaleDateString('en-US', {
-							year: 'numeric',
-							month: 'short'
-						}),
-						location: row[3],
-						ethnicity: row[4],
-						gender: row[5],
-						age: row[6],
-						incidentCount: row[7]
+						date: formatDate(row[2]),
+						ethnicity: row[3],
+						gender: row[4],
+						age: row[5],
+						incidentCount: row[6]
 					}) satisfies crimeRow
 			);
-			// get unique months for X-axis
+
+			// Calculate monthly totals for proportions
+			const monthlyTotals = new Map<string, number>();
+			typedRows.forEach((row) => {
+				const currentTotal = monthlyTotals.get(row.date) || 0;
+				monthlyTotals.set(row.date, currentTotal + row.incidentCount);
+			});
+
+			// Group by demographics and calculate proportions
+			const demographicMap = new Map<
+				string,
+				{
+					label: string;
+					monthlyData: Map<string, number>;
+				}
+			>();
+
+			typedRows.forEach((row) => {
+				const key = `${row.ethnicity}-${row.gender}-${getAgeGroup(row.age)}`;
+
+				if (!demographicMap.has(key)) {
+					demographicMap.set(key, {
+						label: `${row.ethnicity} ${row.gender} ${getAgeGroup(row.age)}`,
+						monthlyData: new Map()
+					});
+				}
+
+				const entry = demographicMap.get(key)!;
+				const monthTotal = monthlyTotals.get(row.date) || 1;
+				const currentCount = entry.monthlyData.get(row.date) || 0;
+				entry.monthlyData.set(row.date, ((currentCount + row.incidentCount) / monthTotal) * 100);
+			});
+
+			// Convert to datasets
+			const datasets = Array.from(demographicMap.values())
+				.map(
+					(demo, index) =>
+						({
+							label: demo.label,
+							data: Array.from(demo.monthlyData.values()),
+							borderColor: getChartColor(index),
+							fill: false
+						}) satisfies DataSet
+				)
+				.sort(
+					(a: DataSet, b: DataSet) =>
+						b.data.reduce((sum: number, val: number) => sum + val, 0) -
+						a.data.reduce((sum: number, val: number) => sum + val, 0)
+				)
+				.slice(0, 10);
+
+			// Get months sorted chronologically
 			const months = [...new Set(typedRows.map((row) => row.date))].sort(
 				(a, b) => new Date(a).getTime() - new Date(b).getTime()
 			);
 
-			// get unique locations for each line
-			const locations = [...new Set(typedRows.map((row) => row.location))].sort();
-
-			// create datasets
-			const datasets = locations.map((location, index) => {
-				// for each location, map out its incidents over months
-				const monthlyData = months.map((month) => {
-					const incidents = typedRows
-						.filter((row) => row.location === location && row.date === month)
-						.reduce((sum, row) => sum + row.incidentCount, 0);
-					return incidents;
-				});
-				return {
-					label: location,
-					data: monthlyData,
-					borderColor: getChartColor(index),
-					fill: false
-				};
-			});
-
 			chart = new Chart(chartCanvas, {
-				// define chart type
 				type: 'line',
-
-				// define data structure
 				data: {
-					// get CRIME_TYPE from each row (X-labels)
 					labels: months,
 					datasets
 				},
 				options: {
-					responsive: true, // chart initial resize to container
-					maintainAspectRatio: false, // allow resize
-
+					responsive: true,
+					maintainAspectRatio: false,
 					plugins: {
-						// configure chart title
 						title: {
 							display: true,
-							text: `Crime Incidents by Demographics (${formData.startDate} to ${formData.endDate})`,
+							text: `Monthly Crime Proportions by Demographics`,
 							font: {
 								size: 16,
 								weight: 'bold'
@@ -149,59 +178,49 @@
 							display: true,
 							position: 'right'
 						},
-						// configure floating tool tips
 						tooltip: {
 							callbacks: {
 								label: (context) => {
 									const value = context.raw as number;
-									return `${value} incidents`;
+									return `${value.toFixed(1)}% of incidents`;
 								}
 							}
 						}
 					},
-					// configure axis scales
 					scales: {
 						y: {
-							// Y-axis
 							beginAtZero: true,
 							title: {
 								display: true,
-								text: 'Number of Incidents'
+								text: 'Percentage of Total Incidents'
 							}
 						},
 						x: {
-							// X-axis
 							title: {
 								display: true,
 								text: 'Month/Year'
 							},
 							ticks: {
-								maxRotation: 45,
+								callback: function (index) {
+									// Add extra space after December to visually separate years
+									const label = months[index as number];
+									return label?.includes('Dec') ? label + '   ' : label;
+								},
+								maxRotation: 45, // Angle the labels for better readability
 								minRotation: 45
 							},
 							grid: {
 								color: (context) => {
+									// Add darker gridline for January to mark year changes
 									const label = months[context.index];
 									return label?.includes('Jan') ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)';
 								}
 							}
 						}
-					},
-
-					animation: {
-						onComplete: () => {
-							isLoading = false;
-						}
 					}
 				}
 			});
 		}
-	});
-	// cleanup
-	onMount(() => {
-		return () => {
-			if (chart) chart.destroy();
-		};
 	});
 </script>
 

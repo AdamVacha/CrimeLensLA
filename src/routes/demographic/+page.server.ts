@@ -26,6 +26,27 @@ export async function load({ url }) {
 	// TODO: implement demographic query
 	const queryParams = [crimeCodes];
 
+	const hasFilters =
+		cP.crimeCategories?.length > 0 ||
+		cP.laRegions?.length > 0 ||
+		cP.startDate ||
+		cP.endDate ||
+		cP.descent ||
+		cP.gender ||
+		cP.ageRange;
+
+	if (!hasFilters) {
+		// No filters provided, return an empty result
+		return {
+			formParams: cP,
+			result: {
+				rows: [],
+				rowsAffected: 0,
+				columns: []
+			}
+		};
+	}
+
 	const query = `
 	SELECT DISTINCT 
         ct.CRIMECODE,
@@ -70,6 +91,7 @@ export async function load({ url }) {
 	console.log('Crime Codes: ', crimeCodes);
 	console.log('Locations: ', locations);
 	console.log('Descent: ', cP.descent);
+	console.log('SQL Query:', query);
 
 	// This data gets returned to the page component
 	return {
