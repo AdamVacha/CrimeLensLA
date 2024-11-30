@@ -6,6 +6,7 @@ export function locationHelper(selectedRegions: string[]): string[] {
 	}
 	// combine regions into single array
 	return selectedRegions.reduce((areas, region) => {
-		return [...areas, ...(LA_REGIONS[region as keyof typeof LA_REGIONS] || [])];
+		const categoryRegions = LA_REGIONS.get(region) || [];
+		return [...areas, ...categoryRegions];
 	}, [] as string[]);
 }
