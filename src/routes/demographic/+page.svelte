@@ -290,7 +290,7 @@
 						<DateRangePicker
 							startDate={formData.startDate}
 							endDate={formData.endDate}
-							minDate="2020-11-10"
+							minDate="2020-01-01"
 							maxDate="2024-11-15"
 							onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
 							onEndDateChange={(newDate: any) => (formData.endDate = newDate)}

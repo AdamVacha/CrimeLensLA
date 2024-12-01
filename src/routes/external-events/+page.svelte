@@ -1,5 +1,16 @@
 <script lang="ts">
-	import { writable } from 'svelte/store';
+	import { goto } from '$app/navigation';
+	import { Chart } from 'chart.js/auto';
+	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
+	import CrimeCategoriesSelect from '$lib/components/CrimeCategoriesSelect.svelte';
+	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
+	import { CRIME_CATEGORIES, LA_REGIONS } from '../../constants';
+	import { getChartColor } from '$lib/utils/chart-colors';
+
+	// Get data from server
+	let { data } = $props();
+	// set loading spinner
+	let isLoading = $state(false);
 
 	// Event options and their corresponding date ranges
 	const events = [
@@ -7,178 +18,415 @@
 		{ label: 'Economic Recession', startDate: '2021-01-01', endDate: '2022-12-31' },
 		{ label: 'Custom Event', startDate: '', endDate: '' }
 	];
-	// Placeholder data for options
-	const crimeCategories = ['Theft', 'Assault', 'Burglary'];
-	const laRegions = ['Central', 'East', 'West', 'South', 'North'];
 
-	// State variables for selected options
-	let selectedCategories = writable<string[]>([]);
-	let selectedRegions = writable<string[]>([]);
-	let selectedEvent = events[0];
-	let startDate = selectedEvent.startDate;
-	let endDate = selectedEvent.endDate;
-	let eventPeriodStart = 0;
-	let eventPeriodEnd = 6;
+	// Form Data Storage (empty string by default or URL loaded)
+	let formData = $state({
+		startDate: data.formParams.startDate ?? events[0].startDate,
+		endDate: data.formParams.endDate ?? events[0].endDate,
+		crimeCategories: data.formParams.crimeCategories,
+		laRegions: data.formParams.laRegions,
+		ageRange: data.formParams.ageRange ?? '',
+		gender: data.formParams.gender ?? '',
+		descent: data.formParams.descent ?? '',
+		selectedEvent:
+			events.find(
+				(event) =>
+					event.startDate === (data.formParams.startDate ?? events[0].startDate) &&
+					event.endDate === (data.formParams.endDate ?? events[0].endDate)
+			) ?? events[0],
+		eventPeriodStart: 0,
+		eventPeriodEnd: 6
+	});
+
+	function handleSubmission(e: any) {
+		e.preventDefault();
+		isLoading = true;
+
+		// intantiate URL parameters object
+		const params = new URLSearchParams();
+
+		for (let categories of formData.crimeCategories) {
+			params.append('crimeCategories', categories);
+		}
+		for (let region of formData.laRegions) {
+			params.append('laRegions', region);
+		}
+
+		params.append('startDate', formData.startDate);
+		params.append('endDate', formData.endDate);
+		params.append('ageRange', formData.ageRange);
+		params.append('gender', formData.gender);
+		params.append('descent', formData.descent);
+		params.append('eventPeriodStart', formData.eventPeriodStart.toString());
+		params.append('eventPeriodEnd', formData.eventPeriodEnd.toString());
+
+		goto(`/external-events?${params.toString()}`, { noScroll: true });
+	}
 
 	// Function to update the date range when an event is selected
 	function updateDateRange() {
-		startDate = selectedEvent.startDate;
-		endDate = selectedEvent.endDate;
+		if (formData.selectedEvent) {
+			formData.startDate = formData.selectedEvent.startDate;
+			formData.endDate = formData.selectedEvent.endDate;
+		}
 	}
 
 	// Function to detect manual date change and update the dropdown to "Custom Event"
 	function handleDateChange() {
-		if (startDate !== selectedEvent.startDate || endDate !== selectedEvent.endDate) {
-			selectedEvent = events.find((event) => event.label === 'Custom Event') || {
+		if (
+			formData.startDate !== formData.selectedEvent.startDate ||
+			formData.endDate !== formData.selectedEvent.endDate
+		) {
+			formData.selectedEvent = events.find((event) => event.label === 'Custom Event') || {
 				label: 'Custom Event',
 				startDate: '',
 				endDate: ''
 			};
 		}
 	}
-	function toggleSelection(array: string[], item: string) {
-		return array.includes(item) ? array.filter((i) => i !== item) : [...array, item];
-	}
 
-	// Placeholder function for generating the trend
-	function generateTrend() {
-		console.log({
-			selectedEvent: selectedEvent.label,
-			startDate,
-			endDate,
-			eventPeriodStart,
-			eventPeriodEnd,
-			selectedCategories,
-			selectedRegions
-		});
+	// instantiate chart data
+	interface DataSet {
+		label: string;
+		data: number[];
+		borderColor: string;
+		fill: boolean;
 	}
+	// instantiate Chart Component
+	let chartCanvas: HTMLCanvasElement;
+	let chart: Chart;
+
+	$effect(() => {
+		if (chartCanvas && data.result?.rows) {
+			if (chart) chart.destroy();
+
+			type crimeRow = {
+				crimeCode: string;
+				crimeDesc: string;
+				date: string;
+				location: string;
+				ethnicity: string;
+				gender: string;
+				age: number;
+				incidentCount: number;
+			};
+
+			const formatDate = (dateStr: string) => {
+				const date = new Date(dateStr);
+				return date.toLocaleDateString('en-US', {
+					month: 'short',
+					year: 'numeric'
+				});
+			};
+
+			const typedRows = data.result.rows.map(
+				(row: any) =>
+					({
+						crimeCode: row[0],
+						crimeDesc: row[1],
+						date: formatDate(row[2]),
+						location: row[3],
+						ethnicity: row[4],
+						gender: row[5],
+						age: row[6],
+						incidentCount: row[7]
+					}) satisfies crimeRow
+			);
+
+			// group by demographics and proportion
+			const demographicMap = new Map<
+				string,
+				{
+					label: string;
+					monthlyData: Map<string, number>;
+				}
+			>();
+
+			// track most common crime committed at that location from all those crimes
+			const crimeStats = $state(new Map<string, Map<string, { crime: string; count: number }>>());
+
+			// initialize periods
+			demographicMap.set('Before Event', {
+				label: 'Before Event',
+				monthlyData: new Map()
+			});
+			demographicMap.set('During Event', {
+				label: 'During Event',
+				monthlyData: new Map()
+			});
+			demographicMap.set('After Event', {
+				label: 'After Event',
+				monthlyData: new Map()
+			});
+
+			typedRows.forEach((row) => {
+				const rowDate = new Date(row.date);
+				const eventStart = new Date(formData.selectedEvent.startDate);
+				const eventEnd = new Date(formData.selectedEvent.endDate);
+
+				// calc ranges for before and after event
+				const beforeStart = new Date(eventStart);
+				beforeStart.setMonth(beforeStart.getMonth() - formData.eventPeriodStart);
+				const afterEnd = new Date(eventEnd);
+				afterEnd.setMonth(afterEnd.getMonth() + formData.eventPeriodEnd);
+
+				let key = '';
+
+				console.log(
+					'row date: ',
+					row.date,
+					'before start: ',
+					beforeStart,
+					'event start: ',
+					eventStart,
+					'after end: ',
+					afterEnd
+				);
+
+				if (rowDate >= beforeStart && rowDate < eventStart) {
+					key = 'Before Event';
+				} else if (rowDate >= eventStart && rowDate <= eventEnd) {
+					key = 'During Event';
+				} else if (rowDate > eventEnd && rowDate <= afterEnd) {
+					key = 'After Event';
+				}
+
+				if (key === '') {
+					console.log('why empty?: ', rowDate);
+					return;
+				}
+
+				if (!demographicMap.has(key)) {
+					demographicMap.set(key, {
+						label: key,
+						monthlyData: new Map()
+					});
+				}
+				// get all demographic data at region
+				const entry = demographicMap.get(key)!;
+
+				// get current incident count
+				const currentCount = entry.monthlyData.get(row.date) || 0;
+
+				// add new incidents to total count for this date
+				entry.monthlyData.set(row.date, currentCount + row.incidentCount);
+			});
+
+			// convert datasets
+			const datasets = Array.from(demographicMap.values())
+				.map(
+					(demo, index) =>
+						({
+							label: demo.label,
+							data: Array.from(demo.monthlyData.values()),
+							borderColor: getChartColor(index),
+							fill: false
+						}) satisfies DataSet
+				)
+				.sort(
+					(a: DataSet, b: DataSet) =>
+						b.data.reduce((sum: number, val: number) => sum + val, 0) -
+						a.data.reduce((sum: number, val: number) => sum + val, 0)
+				)
+				.slice(0, 10);
+
+			// sort months chronilogically
+			const months = [...new Set(typedRows.map((row) => row.date))].sort(
+				(a, b) => new Date(a).getTime() - new Date(b).getTime()
+			);
+
+			// instantiate chart
+			chart = new Chart(chartCanvas, {
+				type: 'line',
+				data: {
+					labels: months,
+					datasets
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					animation: {
+						onComplete: () => {
+							isLoading = false;
+						}
+					},
+					plugins: {
+						title: {
+							display: true,
+							text: `Crime Incidents by External Events (${formData.startDate} to ${formData.endDate})`,
+							font: {
+								size: 16,
+								weight: 'bold'
+							}
+						},
+						legend: {
+							display: true,
+							position: 'right'
+						},
+						tooltip: {
+							callbacks: {
+								label: (context) => {
+									// retrieve total incidents
+									const value = context.raw as number;
+									return `${value} incidents`;
+								}
+							}
+						}
+					},
+					scales: {
+						y: {
+							beginAtZero: true,
+							title: {
+								display: true,
+								text: 'Number of Incidents'
+							}
+						},
+						x: {
+							title: {
+								display: true,
+								text: 'Month/Year'
+							},
+							ticks: {
+								callback: function (index) {
+									// extra spacing after december
+									const label = months[index as number];
+									return label?.includes('Dec') ? label + '   ' : label;
+								},
+								maxRotation: 45, // angle labels
+								minRotation: 45
+							},
+							grid: {
+								color: (context) => {
+									// mark year changes
+									const label = months[context.index];
+									return label?.includes('Jan') ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)';
+								}
+							}
+						}
+					}
+				}
+			});
+		}
+	});
 </script>
 
-<div class="flex min-h-screen justify-center p-10 text-black">
-	<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
-		<h1 class="mb-16 mt-8 text-center text-2xl font-semibold">
-			External Events Influence on Crime
-		</h1>
+<form method="POST" onsubmit={handleSubmission}>
+	{JSON.stringify(formData)}
+	<div class="flex min-h-screen justify-center p-10 text-black">
+		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
+			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold">
+				External Events Influence on Crime
+			</h1>
 
-		<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
-			<!-- Left Column: Controls -->
-			<div class="space-y-6">
-				<!-- Select or Add Event -->
-				<div>
-					<label class="mb-2 block font-medium">Select or Add an Event:</label>
-					<select
-						bind:value={selectedEvent}
-						class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
-						onchange={updateDateRange}
-					>
-						{#each events as event}
-							<option value={event}>{event.label}</option>
-						{/each}
-					</select>
-				</div>
-
-				<!-- Custom Event Date Range -->
-				<div>
-					<label class="mb-2 block font-medium">Select Date Range (Custom Event):</label>
-					<div class="flex items-center space-x-4">
-						<input
-							type="date"
-							bind:value={startDate}
-							class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-							placeholder="Start Date"
-							oninput={handleDateChange}
-						/>
-						To
-						<input
-							type="date"
-							bind:value={endDate}
-							class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
-							placeholder="End Date"
-							oninput={handleDateChange}
-						/>
+			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
+				<!-- Left Column: Controls -->
+				<div class="space-y-6">
+					<!-- Select or Add Event -->
+					<div>
+						<label class="mb-2 block font-medium">Select or Add an Event:</label>
+						<select
+							bind:value={formData.selectedEvent}
+							class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
+							onchange={updateDateRange}
+						>
+							{#each events as event}
+								<option value={event}>{event.label}</option>
+							{/each}
+						</select>
 					</div>
-				</div>
 
-				<!-- Define Event Period -->
-				<div>
-					<label class="mb-2 block font-medium">Define Event Period:</label>
-					<div class="flex items-center space-x-4">
-						<input
-							type="range"
-							min="0"
-							max="12"
-							bind:value={eventPeriodStart}
-							class="range range-primary"
-						/>
-						<span class="text-gray-600">{eventPeriodStart}m before</span>
-					</div>
-					<div class="mt-2 flex items-center space-x-4">
-						<input
-							type="range"
-							min="0"
-							max="12"
-							bind:value={eventPeriodEnd}
-							class="range range-primary"
-						/>
-						<span class="text-gray-600">{eventPeriodEnd}m after</span>
-					</div>
-				</div>
-
-				<!-- Crime Categories Multi-Select -->
-				<div>
-					<label class="mb-2 block font-medium">Select Crime Categories:</label>
-					{#each crimeCategories as category}
-						<div class="mb-2 mr-6 inline items-center">
-							<input
-								type="checkbox"
-								onchange={() =>
-									selectedCategories.set(toggleSelection($selectedCategories, category))}
-								class="checkbox-primary checkbox mr-1"
-								checked={$selectedCategories.includes(category)}
+					<!-- Custom Event Date Range -->
+					<div>
+						<label class="mb-2 block font-medium">Select Date Range (Custom Event):</label>
+						<div class="flex items-center space-x-4">
+							<DateRangePicker
+								startDate={formData.startDate}
+								endDate={formData.endDate}
+								minDate="2020-01-01"
+								maxDate="2024-11-15"
+								onStartDateChange={(newDate: any) => {
+									formData.startDate = newDate;
+									handleDateChange();
+								}}
+								onEndDateChange={(newDate: any) => {
+									formData.endDate = newDate;
+									handleDateChange;
+								}}
 							/>
-							<span>{category}</span>
 						</div>
-					{/each}
-				</div>
+					</div>
 
-				<!-- LA Region Multi-Select -->
-				<div>
-					<label class="mb-2 block font-medium">Select LA Regions:</label>
-					{#each laRegions as region}
-						<div class="mb-2 mr-6 flex items-center">
+					<!-- Define Event Period -->
+					<div>
+						<label class="mb-2 block font-medium">Define Event Period (Months):</label>
+						<div class="flex items-center space-x-4">
 							<input
-								type="checkbox"
-								onchange={() => selectedRegions.set(toggleSelection($selectedRegions, region))}
-								class="checkbox-primary checkbox mr-2"
-								checked={$selectedRegions.includes(region)}
+								type="range"
+								min="0"
+								max="12"
+								bind:value={formData.eventPeriodStart}
+								class="range range-primary"
 							/>
-							<span>{region}</span>
+							<span class="text-gray-600">{formData.eventPeriodStart} before</span>
 						</div>
-					{/each}
+						<div class="mt-2 flex items-center space-x-4">
+							<input
+								type="range"
+								min="0"
+								max="12"
+								bind:value={formData.eventPeriodEnd}
+								class="range range-primary"
+							/>
+							<span class="text-gray-600">{formData.eventPeriodEnd} after</span>
+						</div>
+					</div>
+
+					<!-- Crime Categories Multi-Select -->
+					<div>
+						<CrimeCategoriesSelect
+							categories={CRIME_CATEGORIES}
+							selectedCategories={formData.crimeCategories}
+							onCategoryChange={(categories: any) => (formData.crimeCategories = categories)}
+						/>
+					</div>
+
+					<!-- LA Region Multi-Select -->
+					<div>
+						<LaRegionSelect
+							regions={LA_REGIONS}
+							selectedRegions={formData.laRegions}
+							onRegionChange={(regions: any) => (formData.laRegions = regions)}
+						/>
+					</div>
+
+					<!-- Generate Crime Trend Button -->
+					<div class="flex w-full justify-center pt-4">
+						<button type="submit" class="btn btn-primary w-60 text-base"
+							>Generate Crime Trend
+						</button>
+					</div>
 				</div>
 
-				<!-- Generate Crime Trend Button -->
-				<div class="flex w-full justify-center pt-4">
-					<button onclick={generateTrend} class="btn btn-primary mt-2 w-60 text-base"
-						>Generate Crime Trend</button
-					>
-				</div>
-			</div>
-
-			<!-- Right Column: Chart Placeholder -->
-			<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
-				<!-- Placeholder for the Chart -->
-				<div class="text-center">
-					<h2 class="mb-4 text-xl font-semibold">Chart Title</h2>
-					<p class="text-gray-500">Chart goes here.</p>
+				<!-- Right Column: Chart Placeholder -->
+				<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
+					<!-- Chart Generation (80% viewport height) -->
+					<div class="relative h-[80vh] w-full">
+						{#if isLoading}
+							<div
+								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"
+							>
+								<div class="text-center">
+									<div
+										class="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"
+									></div>
+									<p class="text-grey-700 text-lg font-medium">Generating Chart...</p>
+								</div>
+							</div>
+						{/if}
+						<canvas bind:this={chartCanvas}></canvas>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</div>
-
-<style>
-	.custom-calendar-icon::-webkit-calendar-picker-indicator {
-		filter: invert(50%); /* Adjust the percentage to control color intensity */
-	}
-</style>
+</form>
