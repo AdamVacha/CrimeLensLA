@@ -277,7 +277,6 @@
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6 text-base">
-					TODO reinstate date range picker
 					<DateRangePicker
 						startDate={formData.startDate}
 						endDate={formData.endDate}
