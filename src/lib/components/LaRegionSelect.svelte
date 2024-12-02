@@ -1,25 +1,15 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
-	// Props
-	export let regions: string[] = []; // List of available regions
-	export let selectedRegions: string[] = []; // List of selected regions
-
-	// Set up event dispatcher
-	const dispatch = createEventDispatcher();
+	let { regions = [], selectedRegions = [], onRegionChange = (regions: string[]) => {} } = $props();
 
 	// Toggle a region's selection
 	function toggleRegion(region: string, checked: boolean) {
 		if (region === 'All Regions') {
-			dispatch('regionChange', checked ? regions.filter((r) => r !== 'All Regions') : []);
+			onRegionChange(checked ? regions.filter((r) => r !== 'All Regions') : []);
 		} else {
 			if (checked) {
-				dispatch('regionChange', [...selectedRegions, region]);
+				onRegionChange([...selectedRegions, region]);
 			} else {
-				dispatch(
-					'regionChange',
-					selectedRegions.filter((r) => r !== region)
-				);
+				onRegionChange(selectedRegions.filter((r) => r !== region));
 			}
 		}
 	}
@@ -35,7 +25,7 @@
 				class="checkbox-primary checkbox mr-2"
 				value={region}
 				checked={selectedRegions.includes(region)}
-				on:change={(e) => toggleRegion(region, e.currentTarget.checked)}
+				onchange={(e) => toggleRegion(region, e.currentTarget.checked)}
 			/>
 			<label for={`region-select-${index}`} class="mr-2">{region}</label>
 		</div>

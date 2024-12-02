@@ -2,8 +2,6 @@ import { connection } from '$lib/db';
 import { paramHelper } from '$lib/utils/search-param-helper.js';
 import { crimeCodeHelper } from '$lib/utils/crime-code-helper';
 import { locationHelper } from '$lib/utils/location-helper.js';
-import { ethnicityHelper } from '$lib/utils/ethnicity-helper.js';
-import { ageHelper } from '$lib/utils/age-helper.js';
 
 export async function load({ url }) {
 	// common search params from paramHelper in /lib/utils
@@ -13,15 +11,24 @@ export async function load({ url }) {
 	const crimeCodes = crimeCodeHelper(cP.crimeCategories);
 	//convert region array to regional locations
 	const locations = locationHelper(cP.laRegions);
-	// convert descent into ethnicities
-	const descent = ethnicityHelper(cP.descent);
-	// convert age into selected age groups
-	const ageRange = ageHelper(cP.ageRange);
-	const ageCondition = ageRange
-		? ageRange.min === null
-			? 'AND v.AGE IS NULL'
-			: `AND v.AGE >= ${ageRange.min} AND v.AGE <= ${ageRange?.max}`
-		: '';
+
+	// TODO: implement demographic query
+	const queryParams = [crimeCodes];
+
+	let queryStartDate = cP.startDate;
+	let queryEndDate = cP.endDate;
+
+	if (cP.startDate && cP.eventPeriodStart) {
+		const startDate = new Date(cP.startDate);
+		startDate.setMonth(startDate.getMonth() - Number(cP.eventPeriodStart));
+		queryStartDate = startDate.toISOString().split('T')[0];
+	}
+
+	if (cP.endDate && cP.eventPeriodEnd) {
+		const endDate = new Date(cP.endDate);
+		endDate.setMonth(endDate.getMonth() + Number(cP.eventPeriodEnd));
+		queryEndDate = endDate.toISOString().split('T')[0];
+	}
 
 	// do not contact db server if page is empty
 	const hasFilters =
@@ -44,7 +51,6 @@ export async function load({ url }) {
 			}
 		};
 	}
-
 	const query = `
 	SELECT DISTINCT 
         ct.CRIMECODE,
@@ -63,11 +69,8 @@ export async function load({ url }) {
     WHERE 1=1 
 		${crimeCodes.length ? `AND cict.CRIMECODE IN ('${crimeCodes.join("','")}')` : ''}
         ${locations.length ? `AND l.AREA IN ('${locations.join("','")}')` : ''}
-        ${cP.startDate ? `AND ci.INCIDENTDATE >= TO_DATE('${cP.startDate}', 'YYYY-MM-DD')` : ''}
-        ${cP.endDate ? `AND ci.INCIDENTDATE <= TO_DATE('${cP.endDate}', 'YYYY-MM-DD')` : ''}
-        ${descent.length ? `AND v.ETHNICITY IN ('${descent.join("','")}')` : ''}
-        ${cP.gender ? `AND v.SEX IN ('${cP.gender}')` : ''}
-        ${ageCondition}
+        ${queryStartDate ? `AND ci.INCIDENTDATE >= TO_DATE('${queryStartDate}', 'YYYY-MM-DD')` : ''}
+        ${queryEndDate ? `AND ci.INCIDENTDATE <= TO_DATE('${queryEndDate}', 'YYYY-MM-DD')` : ''}
     GROUP BY 
         ct.CRIMECODE,
         ct.DESCRIPTION,
@@ -80,6 +83,7 @@ export async function load({ url }) {
 
 	const result = await connection.execute(query);
 	console.log('=========SPACE============');
+	console.log('Query Params: ', queryParams);
 	console.log('Start Date: ', cP.startDate);
 	console.log('End Date: ', cP.endDate);
 	console.log('CrimeType: ', cP.crimeCategories);
@@ -87,7 +91,6 @@ export async function load({ url }) {
 	console.log('Result Rows: ', result.rows);
 	console.log('Crime Codes: ', crimeCodes);
 	console.log('Locations: ', locations);
-	console.log('Descent: ', cP.descent);
 	console.log('SQL Query:', query);
 
 	// this data gets returned to the page component
