@@ -269,8 +269,8 @@
 				Demographic Influence on Crime
 			</h1>
 			<h2 class="text-grey text-grey-700 mb-8 mt-8 text-center text-lg font-semibold">
-				How do crime rates vary by the age, gender, or descent of victims in different areas of Los
-				Angeles?
+				"How do crime rates vary by the age, gender, or descent of victims in different areas of Los
+				Angeles?"
 			</h2>
 			<p class="mx-auto mb-12 max-w-4xl text-lg leading-relaxed text-gray-600">
 				This query evaluates how demographic factors like age, gender, and descent influence crime

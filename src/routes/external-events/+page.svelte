@@ -317,6 +317,16 @@
 			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold">
 				External Events Influence on Crime
 			</h1>
+			<h2 class="text-grey text-grey-700 mb-8 mt-8 text-center text-lg font-semibold">
+				“How do big events, like natural disasters or major political changes, affect crime rates?"
+			</h2>
+			<p class="mx-auto mb-12 max-w-4xl text-lg leading-relaxed text-gray-600">
+				This query investigates the relationship between crime trends and major external events,
+				such as economic recession caused by the COVID-19 pandemic. Users can specify the time
+				period before, during, and after these events, as well as the types of crimes they wish to
+				analyze. The query dynamically adjusts based on the chosen events, allowing for a comparison
+				of crime rates in different periods.
+			</p>
 
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
