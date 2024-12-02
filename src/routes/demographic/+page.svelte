@@ -116,23 +116,28 @@
 			typedRows.forEach((row) => {
 				let key = '';
 
+				// get YYYY-MM
+				const monthKey = row.date.substring(0, 8);
+
+				console.log(monthKey);
+
 				// set key to region name of crime commited
 				for (const [regionName, areas] of LA_REGIONS_MAP.entries()) {
 					if (areas.includes(row.location)) {
 						key = regionName;
 					}
 				}
-				// if this region deoesnt exist, store date -> crime data in new map
+				// if this region doesnt exist, store date -> crime data in new map
 				if (!crimeStats.has(key)) {
 					crimeStats.set(key, new Map());
 				}
 				// get map of all dates for this region or if we havnt tracked this date yet, instantiate it
 				const regionMap = crimeStats.get(key)!;
-				if (!regionMap.has(row.date)) {
-					regionMap.set(row.date, { crime: row.crimeDesc, count: 0 });
+				if (!regionMap.has(monthKey)) {
+					regionMap.set(monthKey, { crime: row.crimeDesc, count: 0 });
 				}
 				// get current crime stats on this date, store most committed crime
-				const currentStats = regionMap.get(row.date)!;
+				const currentStats = regionMap.get(monthKey)!;
 				if (row.incidentCount > currentStats.count) {
 					currentStats.crime = row.crimeDesc;
 					currentStats.count = row.incidentCount;
@@ -148,10 +153,10 @@
 				const entry = demographicMap.get(key)!;
 
 				// get current incident count
-				const currentCount = entry.monthlyData.get(row.date) || 0;
+				const currentCount = entry.monthlyData.get(monthKey) || 0;
 
 				// add new incidents to total count for this date
-				entry.monthlyData.set(row.date, currentCount + row.incidentCount);
+				entry.monthlyData.set(monthKey, currentCount + row.incidentCount);
 			});
 
 			// convert datasets
@@ -173,7 +178,7 @@
 				.slice(0, 10);
 
 			// sort months chronilogically
-			const months = [...new Set(typedRows.map((row) => row.date))].sort(
+			const months = [...new Set(typedRows.map((row) => row.date.substring(0, 8)))].sort(
 				(a, b) => new Date(a).getTime() - new Date(b).getTime()
 			);
 

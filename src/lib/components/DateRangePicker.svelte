@@ -5,10 +5,10 @@
 	// TODO move all components in /src/components to /src/lib/components
 	// TODO copy updated rune logic from DateRangePicker to other components
 	let {
-		startDate = '01/01/2020',
-		endDate = '12/31/2024',
-		minDate = '01/01/2020',
-		maxDate = '12/31/2024',
+		startDate = '',
+		endDate = '',
+		minDate = '',
+		maxDate = '',
 		onStartDateChange = (date: string) => {},
 		onEndDateChange = (date: string) => {}
 	} = $props();

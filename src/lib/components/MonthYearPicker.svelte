@@ -1,54 +1,62 @@
 <script lang="ts">
+	// a wrapper around the current date picker that breaks the calender into month choices
+	// start date auto = first day of chosen month
+	// end date auto = last day of chosen month
 	let {
-		startDate = '2020-01-01',
-		endDate = '12/31/2024',
-		minDate = '01/01/2020',
-		maxDate = '12/31/2024',
+		startDate = '',
+		endDate = '',
+		minDate = '',
+		maxDate = '',
 		onStartDateChange = (date: string) => {},
 		onEndDateChange = (date: string) => {}
 	} = $props();
 
-	// cut dates to months / years for display
-	let monthValueStart = $derived(
-		startDate ? new Date(startDate).toISOString().substring(0, 7) : ''
-	);
-	let monthValueEnd = $derived(endDate ? new Date(endDate).toISOString().substring(0, 7) : '');
-
-	// helper function to convert back to full date
-	function formatDatefromMonth(monthString: string, isEndDate = false): string {
-		const [year, month] = monthString.split('-');
-		if (isEndDate) {
-			// get last day of selected month
-			const lastDay = new Date(Number(year), Number(month), 0).getDate();
-			const fullEndDate = new Date(`${monthString}-${lastDay}`);
-
-			// then format as MM/DD/YYYY
-			return `${(fullEndDate.getMonth() + 1).toString().padStart(2, '0')}/${fullEndDate.getDate().toString().padStart(2, '0')}/${fullEndDate.getFullYear()}`;
+	// Safely parse date string to YYYY-MM format
+	function parseToMonthValue(dateStr: string): string {
+		if (!dateStr) return '';
+		try {
+			const parts = dateStr.split('/');
+			if (parts.length === 3) {
+				const [month, day, year] = parts;
+				return `${year}-${month.padStart(2, '0')}`;
+			}
+			return '';
+		} catch (e) {
+			return '';
 		}
-		// otherwise get first day of month
-		const firstDay = new Date(Number(year), Number(month), 1).getDate();
-		const fullStartDate = new Date(`${monthString}-${firstDay}`);
-		return `${(fullStartDate.getMonth() + 1).toString().padStart(2, '0')}/${fullStartDate.getDate().toString().padStart(2, '0')}/${fullStartDate.getFullYear()}`;
+	}
+
+	let monthValueStart = $derived(parseToMonthValue(startDate));
+	let monthValueEnd = $derived(parseToMonthValue(endDate));
+
+	function formatToISO(monthStr: string, isEndDate = false): string {
+		if (!monthStr) return '';
+		const [year, month] = monthStr.split('-');
+		if (!year || !month) return '';
+
+		if (isEndDate) {
+			const lastDay = new Date(Number(year), Number(month), 0).getDate();
+			return `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+		}
+		return `${year}-${month}-01`;
 	}
 
 	const updateStartDate = (e: Event) => {
 		const newMonth = (e.target as HTMLInputElement).value;
-		const formattedDate = formatDatefromMonth(newMonth, false);
-		onStartDateChange(formattedDate);
+		const formattedDate = formatToISO(newMonth, false);
+		if (formattedDate) onStartDateChange(formattedDate);
 
-		// Ensure endDate respects the updated startDate
-		if (endDate && new Date(endDate) < new Date(formattedDate)) {
+		if (endDate && formattedDate && new Date(endDate) < new Date(formattedDate)) {
 			onEndDateChange(formattedDate);
 		}
 	};
 
 	const updateEndDate = (e: Event) => {
 		const newMonth = (e.target as HTMLInputElement).value;
-		const formattedDate = formatDatefromMonth(newMonth, true);
-		onEndDateChange(formattedDate);
+		const formattedDate = formatToISO(newMonth, true);
+		if (formattedDate) onEndDateChange(formattedDate);
 
-		// Ensure endDate respects the updated startDate
-		if (startDate && new Date(startDate) > new Date(formattedDate)) {
+		if (startDate && formattedDate && new Date(startDate) > new Date(formattedDate)) {
 			onStartDateChange(formattedDate);
 		}
 	};
@@ -58,8 +66,8 @@
 	<input
 		type="month"
 		value={monthValueStart}
-		min={minDate?.substring(0, 7)}
-		max={(endDate || maxDate)?.substring(0, 7)}
+		min={minDate ? parseToMonthValue(minDate) : undefined}
+		max={endDate ? parseToMonthValue(endDate) : parseToMonthValue(maxDate)}
 		class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
 		oninput={updateStartDate}
 	/>
@@ -67,8 +75,8 @@
 	<input
 		type="month"
 		value={monthValueEnd}
-		min={(startDate || minDate)?.substring(0, 7)}
-		max={maxDate?.substring(0, 7)}
+		min={startDate ? parseToMonthValue(startDate) : parseToMonthValue(minDate)}
+		max={maxDate ? parseToMonthValue(maxDate) : undefined}
 		class="custom-calendar-icon input input-bordered input-primary mb-2 mr-2 inline bg-white text-black"
 		oninput={updateEndDate}
 	/>
