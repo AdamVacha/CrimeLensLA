@@ -266,20 +266,17 @@
 <form method="POST" onsubmit={handleSubmission}>
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
-		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
-			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
+		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-4 pb-20 shadow-lg">
+			<h1 class="mb-4 mt-4 text-center text-2xl font-semibold text-black">
 				Geographic Variation in Crime
 			</h1>
-			<h2 class="text-grey text-grey-700 mb-8 mt-8 text-center text-lg font-semibold">
+			<h2 class="text-grey text-grey-700 mb-4 mt-4 text-center text-lg font-semibold">
 				“Which neighborhoods in Los Angeles have experienced the highest or lowest crime rates, and
 				how has this changed over time?”
 			</h2>
-			<p class="mx-auto mb-12 max-w-4xl text-lg leading-relaxed text-gray-600">
+			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
 				This query focuses on the geographic distribution of crimes across different neighborhoods
-				or reporting districts in Los Angeles. Users can filter by crime type and view the crime
-				distribution across areas like Wilshire, Central, or Southeast LA. The query aggregates
-				crime incidents by location, visualizing which areas are most affected over time, with
-				filters for specific crime categories.
+				or reporting districts in Los Angeles.
 			</p>
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[38%_60%]">
 				<!-- Left Column: Controls -->

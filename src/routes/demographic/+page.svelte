@@ -270,19 +270,16 @@
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
 		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
-			<h1 class="mb-8 mt-8 text-center text-2xl font-bold text-black">
+			<h1 class="mb-4 mt-4 text-center text-2xl font-bold text-black">
 				Demographic Influence on Crime
 			</h1>
-			<h2 class="text-grey text-grey-700 mb-8 mt-8 text-center text-lg font-semibold">
+			<h2 class="text-grey text-grey-700 mb-4 mt-4 text-center text-lg font-semibold">
 				"How do crime rates vary by the age, gender, or descent of victims in different areas of Los
 				Angeles?"
 			</h2>
-			<p class="mx-auto mb-12 max-w-4xl text-lg leading-relaxed text-gray-600">
+			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
 				This query evaluates how demographic factors like age, gender, and descent influence crime
-				rates in specific areas of Los Angeles. Users can filter the data by specific demographic
-				groups and crime categories to understand how these factors impacted crime trends. Crime
-				category filter represents nearly a hundred crime types combined. Descent filter combines
-				nearly 20 demographics.
+				rates in specific areas of Los Angeles.
 			</p>
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
