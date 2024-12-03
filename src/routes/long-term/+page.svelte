@@ -270,10 +270,16 @@
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
 		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
-			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
+			<h1 class="mb-8 mt-4 text-center text-2xl font-semibold text-black">
 				Long-Term Crime Trends
 			</h1>
-
+			<h2 class="text-grey text-grey-700 mb-2 mt-4 text-center text-lg font-semibold">
+				“How have different types of crimes evolved in Los Angeles from 2020 to present?”
+			</h2>
+			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
+				This query analyzes the changes in specific crime categories (e.g., theft, assault,
+				burglary) over time, focusing on the 7 time period from 2020 to the present.
+			</p>
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6 text-base">

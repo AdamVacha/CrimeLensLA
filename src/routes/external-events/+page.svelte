@@ -172,17 +172,6 @@
 
 				let key = '';
 
-				console.log(
-					'row date: ',
-					row.date,
-					'before start: ',
-					beforeStart,
-					'event start: ',
-					eventStart,
-					'after end: ',
-					afterEnd
-				);
-
 				if (rowDate >= beforeStart && rowDate < eventStart) {
 					key = 'Before Event';
 				} else if (rowDate >= eventStart && rowDate <= eventEnd) {
@@ -192,7 +181,6 @@
 				}
 
 				if (key === '') {
-					console.log('why empty?: ', rowDate);
 					return;
 				}
 
@@ -314,18 +302,15 @@
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
 		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
-			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold">
+			<h1 class="mb-4 mt-4 text-center text-2xl font-semibold">
 				External Events Influence on Crime
 			</h1>
-			<h2 class="text-grey text-grey-700 mb-8 mt-8 text-center text-lg font-semibold">
+			<h2 class="text-grey text-grey-700 mb-4 mt-4 text-center text-lg font-semibold">
 				“How do big events, like natural disasters or major political changes, affect crime rates?"
 			</h2>
-			<p class="mx-auto mb-12 max-w-4xl text-lg leading-relaxed text-gray-600">
+			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
 				This query investigates the relationship between crime trends and major external events,
-				such as economic recession caused by the COVID-19 pandemic. Users can specify the time
-				period before, during, and after these events, as well as the types of crimes they wish to
-				analyze. The query dynamically adjusts based on the chosen events, allowing for a comparison
-				of crime rates in different periods.
+				such as economic recession caused by the COVID-19 pandemic.
 			</p>
 
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">

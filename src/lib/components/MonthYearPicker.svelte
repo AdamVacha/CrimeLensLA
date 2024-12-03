@@ -11,7 +11,7 @@
 		onEndDateChange = (date: string) => {}
 	} = $props();
 
-	// Safely parse date string to YYYY-MM format
+	// safely parse date string to YYYY-MM format
 	function parseToMonthValue(dateStr: string): string {
 		if (!dateStr) return '';
 		try {
