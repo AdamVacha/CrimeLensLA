@@ -119,8 +119,6 @@
 				// get YYYY-MM
 				const monthKey = row.date.substring(0, 8);
 
-				console.log(monthKey);
-
 				// set key to region name of crime commited
 				for (const [regionName, areas] of LA_REGIONS_MAP.entries()) {
 					if (areas.includes(row.location)) {

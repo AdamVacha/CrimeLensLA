@@ -4,3 +4,5 @@ export const LA_REGIONS = ['All Regions', 'North', 'South', 'Central', 'East', '
 export const VICTIM_AGE = ['0-18', '19-30', '31-50', '51+', 'Unknown'];
 export const VICTIM_GENDER = ['Female', 'Male', 'Unknown'];
 export const VICTIM_DESCENT = ['Asian', 'Black', 'Hispanic', 'White', 'Other'];
+export const SEASONS = ['All Seasons', 'Winter', 'Spring', 'Summer', 'Fall'];
+export const HOLIDAYS = ['All Holidays', "New Year's", 'Thanksgiving', 'Christmas'];

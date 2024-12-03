@@ -9,6 +9,8 @@ export async function load({ url }) {
 	// common search params from paramHelper in /lib/utils
 	const cP = paramHelper(url.searchParams);
 
+	// TODO connect seasons / holidays to actual dates in the query
+
 	//convert crime categories to crime codes
 	const crimeCodes = crimeCodeHelper(cP.crimeCategories);
 	//convert region array to regional locations
@@ -93,6 +95,7 @@ export async function load({ url }) {
 	console.log('Locations: ', locations);
 	console.log('Descent: ', cP.descent);
 	console.log('SQL Query:', query);
+	console.log('pre season helper: ', cP.selectedSeason);
 
 	// this data gets returned to the page component
 	return {

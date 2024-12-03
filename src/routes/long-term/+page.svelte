@@ -277,7 +277,7 @@
 				“How have different types of crimes evolved in Los Angeles from 2020 to present?”
 			</h2>
 			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
-				. This query analyzes the changes in specific crime categories (e.g., theft, assault,
+				This query analyzes the changes in specific crime categories (e.g., theft, assault,
 				burglary) over time, focusing on the 7 time period from 2020 to the present.
 			</p>
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">

@@ -172,17 +172,6 @@
 
 				let key = '';
 
-				console.log(
-					'row date: ',
-					row.date,
-					'before start: ',
-					beforeStart,
-					'event start: ',
-					eventStart,
-					'after end: ',
-					afterEnd
-				);
-
 				if (rowDate >= beforeStart && rowDate < eventStart) {
 					key = 'Before Event';
 				} else if (rowDate >= eventStart && rowDate <= eventEnd) {
@@ -192,7 +181,6 @@
 				}
 
 				if (key === '') {
-					console.log('why empty?: ', rowDate);
 					return;
 				}
 

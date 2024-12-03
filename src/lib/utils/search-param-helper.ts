@@ -8,6 +8,9 @@ export const paramHelper = (params: URLSearchParams) => {
 	const descent = params.get('descent');
 	const eventPeriodStart = params.get('eventPeriodStart');
 	const eventPeriodEnd = params.get('eventPeriodEnd');
+	const filterBy = params.get('season');
+	const selectedSeason = params.getAll('seasons');
+	const selectedHoliday = params.getAll('holidays');
 
 	return {
 		crimeCategories,
@@ -18,6 +21,9 @@ export const paramHelper = (params: URLSearchParams) => {
 		gender,
 		descent,
 		eventPeriodStart,
-		eventPeriodEnd
+		eventPeriodEnd,
+		filterBy,
+		selectedSeason,
+		selectedHoliday
 	};
 };
