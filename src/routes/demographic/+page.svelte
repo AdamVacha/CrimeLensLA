@@ -59,6 +59,10 @@
 		data: number[];
 		borderColor: string;
 		fill: boolean;
+		tension: number;
+		borderWidth: number;
+		pointRadius: number;
+		pointHoverRadius: number;
 	}
 	// instantiate Chart Component
 	let chartCanvas: HTMLCanvasElement;
@@ -158,6 +162,8 @@
 			});
 
 			// convert datasets
+
+			// TODO smooth out jagged lines in graph
 			const datasets = Array.from(demographicMap.values())
 				.map(
 					(demo, index) =>
@@ -165,7 +171,11 @@
 							label: demo.label,
 							data: Array.from(demo.monthlyData.values()),
 							borderColor: getChartColor(index),
-							fill: false
+							fill: false,
+							tension: 0.2, // Add line smoothing
+							borderWidth: 3, // Thicker lines
+							pointRadius: 4, // Smaller points
+							pointHoverRadius: 6 // Larger hover points
 						}) satisfies DataSet
 				)
 				.sort(

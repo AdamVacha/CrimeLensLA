@@ -261,6 +261,7 @@
 			});
 		}
 	});
+	// TODO hover over shows actual query
 </script>
 
 <form method="POST" onsubmit={handleSubmission}>
@@ -284,6 +285,7 @@
 					<label for="date-range-picker" class="mb-2 block text-base font-medium"
 						>Select Date Range:</label
 					>
+					// TODO stop the date from reloading the entire server its reactive rn
 					<DateRangePicker
 						startDate={formData.startDate}
 						endDate={formData.endDate}

@@ -12,6 +12,8 @@ export const paramHelper = (params: URLSearchParams) => {
 	const selectedSeason = params.get('seasons');
 	const selectedHoliday = params.get('holidays');
 	const timeGranularity = params.get('timeGranularity');
+	const monthsBeforeEvent = params.get('monthsBeforeEvent');
+	const monthsAfterEvent = params.get('monthsAfterEvent');
 
 	return {
 		crimeCategories,
@@ -26,6 +28,8 @@ export const paramHelper = (params: URLSearchParams) => {
 		filterBy,
 		selectedSeason,
 		selectedHoliday,
-		timeGranularity
+		timeGranularity,
+		monthsBeforeEvent,
+		monthsAfterEvent
 	};
 };
