@@ -281,6 +281,9 @@
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[38%_60%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6 text-base">
+					<label for="date-range-picker" class="mb-2 block text-base font-medium"
+						>Select Date Range:</label
+					>
 					<DateRangePicker
 						startDate={formData.startDate}
 						endDate={formData.endDate}

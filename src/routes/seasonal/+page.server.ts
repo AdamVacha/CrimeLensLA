@@ -7,14 +7,10 @@ export async function load({ url }) {
 	// common search params from paramHelper in /lib/utils
 	const cP = paramHelper(url.searchParams);
 
-	// TODO connect seasons / holidays to actual dates in the query
-
 	//convert crime categories to crime codes
 	const crimeCodes = crimeCodeHelper(cP.crimeCategories);
 	//convert region array to regional locations
 	const locations = locationHelper(cP.laRegions);
-
-	// TODO: implement demographic query
 
 	// do not contact db server if page is empty
 	const hasFilters =
@@ -37,7 +33,6 @@ export async function load({ url }) {
 		};
 	}
 
-	// TODO add CASE logic for string 'All Seasons' to refer // exmp. winter = all winters but All Seasons = all seasons at once
 	let query = `
 	SELECT DISTINCT 
 		ct.CRIMECODE,
@@ -62,6 +57,7 @@ export async function load({ url }) {
 				AND EXTRACT(DAY FROM ci.INCIDENTDATE) = 25 THEN 'Christmas'
 			WHEN (EXTRACT(MONTH FROM ci.INCIDENTDATE) = 12 AND EXTRACT(DAY FROM ci.INCIDENTDATE) = 31)
             	OR (EXTRACT(MONTH FROM ci.INCIDENTDATE) = 1 AND EXTRACT(DAY FROM ci.INCIDENTDATE) = 1) THEN 'NewYears'
+			ELSE 'Regular Day'
 		END AS HOLIDAY
 		FROM CRIMEINCIDENT ci
 		JOIN CRIMEINCIDENTCRIMETYPE cict ON ci.INCIDENTID = cict.INCIDENTID

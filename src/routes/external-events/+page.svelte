@@ -14,8 +14,8 @@
 
 	// Event options and their corresponding date ranges
 	const events = [
-		{ label: 'COVID-19 Pandemic', startDate: '2020-01-01', endDate: '2023-05-05' },
-		{ label: 'Economic Recession', startDate: '2021-01-01', endDate: '2022-12-31' },
+		{ label: 'COVID-19 Pandemic', startDate: '2020-01-01', endDate: '2020-12-31' },
+		{ label: 'Economic Recession', startDate: '2021-01-01', endDate: '2021-12-31' },
 		{ label: 'Custom Event', startDate: '', endDate: '' }
 	];
 

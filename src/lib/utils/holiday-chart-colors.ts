@@ -4,5 +4,5 @@ export const holidayColors = {
 	July4th: 'rgba(1, 53, 229, 0.7)', // Blue
 	Thanksgiving: 'rgba(75, 52, 19, 0.7)', // Brown
 	Christmas: 'rgba(255, 0, 0, 0.7)', // Red
-	NewYears: 'rgba(222, 185, 90, 0.7)' // Yellow
+	NewYears: 'rgba(150, 153, 127, 0.7)' // Yellow
 };
