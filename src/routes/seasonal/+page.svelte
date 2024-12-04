@@ -1,21 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { Chart } from 'chart.js/auto';
-	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import CrimeCategoriesSelect from '$lib/components/CrimeCategoriesSelect.svelte';
 	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
-	import VictimDemographicsSelect from '$lib/components/VictimDemographicsSelect.svelte';
-	import {
-		CRIME_CATEGORIES,
-		LA_REGIONS,
-		VICTIM_AGE,
-		VICTIM_GENDER,
-		VICTIM_DESCENT,
-		SEASONS,
-		HOLIDAYS
-	} from '../../constants';
-	import { getChartColor } from '$lib/utils/chart-colors';
-	import { LA_REGIONS_MAP } from '$lib/utils/location-map';
+	import { CRIME_CATEGORIES, LA_REGIONS, SEASONS, HOLIDAYS } from '../../constants';
+	import { seasonColors } from '$lib/utils/season-chart-colors';
+	import { holidayColors } from '$lib/utils/holiday-chart-colors';
 
 	// Get data from server
 	let { data } = $props();
@@ -24,16 +14,13 @@
 
 	// Form Data Storage (empty string by default or URL loaded)
 	let formData = $state({
-		startDate: data.formParams.startDate ?? '',
-		endDate: data.formParams.endDate ?? '',
+		startDate: data.formParams.startDate ?? '2020-01-01',
+		endDate: data.formParams.endDate ?? '2020-02-01',
 		crimeCategories: data.formParams.crimeCategories,
 		laRegions: data.formParams.laRegions,
-		ageRange: data.formParams.ageRange ?? '',
-		gender: data.formParams.gender ?? '',
-		descent: data.formParams.descent ?? '',
 		filterBy: data.formParams.filterBy ?? 'Season',
-		selectedSeason: data.formParams.selectedSeason ?? ['All Seasons'],
-		selectedHoliday: data.formParams.selectedHoliday ?? ['All Holidays']
+		selectedSeason: data.formParams.selectedSeason ?? '',
+		selectedHoliday: data.formParams.selectedHoliday ?? ''
 	});
 
 	function handleSubmission(e: any) {
@@ -49,32 +36,11 @@
 		for (let region of formData.laRegions) {
 			params.append('laRegions', region);
 		}
-		// handle all seasons
-		if (formData.selectedSeason[0] === 'All Seasons') {
-			SEASONS.slice(1).forEach((season) => {
-				params.append('seasons', season);
-			});
-		} else {
-			params.append('seasons', formData.selectedSeason[0]);
-		}
-		// handle all holidays
-		if (formData.selectedHoliday[0] === 'All Holidays') {
-			HOLIDAYS.slice(1).forEach((holiday) => {
-				params.append('holidays', holiday);
-			});
-		} else {
-			params.append('holidays', formData.selectedHoliday[0]);
-		}
 
-		for (let holidays of formData.selectedHoliday) {
-			params.append('holidays', holidays);
-		}
-
+		params.append('seasons', formData.selectedSeason);
+		params.append('holidays', formData.selectedHoliday);
 		params.append('startDate', formData.startDate);
 		params.append('endDate', formData.endDate);
-		params.append('ageRange', formData.ageRange);
-		params.append('gender', formData.gender);
-		params.append('descent', formData.descent);
 
 		goto(`/seasonal?${params.toString()}`, { noScroll: true });
 	}
@@ -82,26 +48,29 @@
 	interface DataSet {
 		label: string;
 		data: number[];
+		backgroundColor: string;
 		borderColor: string;
-		fill: boolean;
+		borderWidth: number;
 	}
 	// instantiate Chart Component
 	let chartCanvas: HTMLCanvasElement;
 	let chart: Chart;
 
 	$effect(() => {
+		console.log('Effect triggered with data: ', data.result?.rows);
+		console.log('Current filterBy: ', formData.filterBy);
+
 		if (chartCanvas && data.result?.rows) {
 			if (chart) chart.destroy();
 
+			console.log('Creating Season Chart: ');
 			type crimeRow = {
 				crimeCode: string;
 				crimeDesc: string;
 				date: string;
 				location: string;
-				ethnicity: string;
-				gender: string;
-				age: number;
 				incidentCount: number;
+				season: string;
 			};
 
 			const formatDate = (dateStr: string) => {
@@ -119,97 +88,43 @@
 						crimeDesc: row[1],
 						date: formatDate(row[2]),
 						location: row[3],
-						ethnicity: row[4],
-						gender: row[5],
-						age: row[6],
-						incidentCount: row[7]
+						incidentCount: row[4],
+						season: row[5]
 					}) satisfies crimeRow
 			);
 
-			// group by demographics and proportion
-			const demographicMap = new Map<
-				string,
-				{
-					label: string;
-					monthlyData: Map<string, number>;
-				}
-			>();
-
-			// track most common crime committed at that location from all those crimes
-			const crimeStats = $state(new Map<string, Map<string, { crime: string; count: number }>>());
+			// Group data by region and season
+			const processedData = new Map<string, Record<string, number>>();
 
 			typedRows.forEach((row) => {
-				let key = '';
-
-				// get YYYY-MM
-				const monthKey = row.date.substring(0, 8);
-
-				// set key to region name of crime commited
-				for (const [regionName, areas] of LA_REGIONS_MAP.entries()) {
-					if (areas.includes(row.location)) {
-						key = regionName;
-					}
-				}
-				// if this region doesnt exist, store date -> crime data in new map
-				if (!crimeStats.has(key)) {
-					crimeStats.set(key, new Map());
-				}
-				// get map of all dates for this region or if we havnt tracked this date yet, instantiate it
-				const regionMap = crimeStats.get(key)!;
-				if (!regionMap.has(monthKey)) {
-					regionMap.set(monthKey, { crime: row.crimeDesc, count: 0 });
-				}
-				// get current crime stats on this date, store most committed crime
-				const currentStats = regionMap.get(monthKey)!;
-				if (row.incidentCount > currentStats.count) {
-					currentStats.crime = row.crimeDesc;
-					currentStats.count = row.incidentCount;
-				}
-
-				if (!demographicMap.has(key)) {
-					demographicMap.set(key, {
-						label: key,
-						monthlyData: new Map()
+				if (!processedData.has(row.location)) {
+					processedData.set(row.location, {
+						Spring: 0,
+						Summer: 0,
+						Fall: 0,
+						Winter: 0
 					});
 				}
-				// get all demographic data at region
-				const entry = demographicMap.get(key)!;
-
-				// get current incident count
-				const currentCount = entry.monthlyData.get(monthKey) || 0;
-
-				// add new incidents to total count for this date
-				entry.monthlyData.set(monthKey, currentCount + row.incidentCount);
+				const regionData = processedData.get(row.location)!;
+				regionData[row.season] += row.incidentCount;
 			});
 
-			// convert datasets
-			const datasets = Array.from(demographicMap.values())
-				.map(
-					(demo, index) =>
-						({
-							label: demo.label,
-							data: Array.from(demo.monthlyData.values()),
-							borderColor: getChartColor(index),
-							fill: false
-						}) satisfies DataSet
-				)
-				.sort(
-					(a: DataSet, b: DataSet) =>
-						b.data.reduce((sum: number, val: number) => sum + val, 0) -
-						a.data.reduce((sum: number, val: number) => sum + val, 0)
-				)
-				.slice(0, 10);
+			// Prepare data for Chart.js
+			const regions = Array.from(processedData.keys());
 
-			// sort months chronilogically
-			const months = [...new Set(typedRows.map((row) => row.date.substring(0, 8)))].sort(
-				(a, b) => new Date(a).getTime() - new Date(b).getTime()
-			);
+			const datasets: DataSet[] = SEASONS.map((season) => ({
+				label: season,
+				data: regions.map((region) => processedData.get(region)![season]),
+				backgroundColor: seasonColors[season as keyof typeof seasonColors],
+				borderColor: 'rgba(0,0,0,0.1)',
+				borderWidth: 1
+			}));
 
-			// instantiate chart
+			// Create the chart
 			chart = new Chart(chartCanvas, {
-				type: 'line',
+				type: 'bar',
 				data: {
-					labels: months,
+					labels: regions,
 					datasets
 				},
 				options: {
@@ -223,7 +138,7 @@
 					plugins: {
 						title: {
 							display: true,
-							text: `Crime Incidents by Demographics (${formData.startDate} to ${formData.endDate})`,
+							text: `Seasonal Crime Incidents by Region (${formData.startDate} to ${formData.endDate})`,
 							font: {
 								size: 16,
 								weight: 'bold'
@@ -231,56 +146,36 @@
 						},
 						legend: {
 							display: true,
-							position: 'right'
+							position: 'top'
 						},
 						tooltip: {
 							callbacks: {
 								label: (context) => {
-									// retrieve total incidents
 									const value = context.raw as number;
-
-									// get crime and incident count per region and date
-									const region = context.dataset.label;
-									const date = months[context.dataIndex];
-									const stats = region ? crimeStats.get(region)?.get(date) : undefined;
-
-									return [
-										`${value} incidents`,
-										`Most common crime: ${stats?.crime || 'None'} with: ${stats?.count || 0} incidents`
-									];
+									const season = context.dataset.label;
+									return `${season}: ${value.toLocaleString()} incidents`;
 								}
 							}
 						}
 					},
 					scales: {
+						x: {
+							title: {
+								display: true,
+								text: 'Regions'
+							},
+							ticks: {
+								maxRotation: 45,
+								minRotation: 45
+							}
+						},
 						y: {
 							beginAtZero: true,
 							title: {
 								display: true,
 								text: 'Number of Incidents'
-							}
-						},
-						x: {
-							title: {
-								display: true,
-								text: 'Month/Year'
 							},
-							ticks: {
-								callback: function (index) {
-									// extra spacing after december
-									const label = months[index as number];
-									return label?.includes('Dec') ? label + '   ' : label;
-								},
-								maxRotation: 45, // angle labels
-								minRotation: 45
-							},
-							grid: {
-								color: (context) => {
-									// mark year changes
-									const label = months[context.index];
-									return label?.includes('Jan') ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)';
-								}
-							}
+							stacked: true // Stack the bars for each region
 						}
 					}
 				}
@@ -337,7 +232,7 @@
 						<label class="mb-2 block font-medium">Select Season:</label>
 						<select
 							class="select select-primary mb-2 w-full max-w-xs bg-white disabled:border-none disabled:bg-gray-200 disabled:text-gray-500"
-							bind:value={formData.selectedSeason[0]}
+							bind:value={formData.selectedSeason}
 							disabled={formData.filterBy !== 'Season'}
 						>
 							{#each SEASONS as season}
@@ -351,7 +246,7 @@
 						<label class="mb-2 block font-medium">Select Holiday:</label>
 						<select
 							class="select select-primary mb-2 w-full max-w-xs bg-white disabled:border-none disabled:bg-gray-200 disabled:text-gray-500"
-							bind:value={formData.selectedHoliday[0]}
+							bind:value={formData.selectedHoliday}
 							disabled={formData.filterBy !== 'Holiday'}
 						>
 							{#each HOLIDAYS as holiday}
@@ -359,18 +254,7 @@
 							{/each}
 						</select>
 					</div>
-					// TODO connect seasons and holidays to actual dates (serverside)
-					<!-- Select Year Range -->
-					<div class="year-input">
-						<DateRangePicker
-							startDate={formData.startDate}
-							endDate={formData.endDate}
-							minDate="2020-01-01"
-							maxDate="2024-11-15"
-							onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
-							onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
-						/>
-					</div>
+
 					<!-- Crime Categories Multi-Select -->
 					<div>
 						<CrimeCategoriesSelect

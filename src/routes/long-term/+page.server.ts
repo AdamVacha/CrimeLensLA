@@ -2,31 +2,19 @@ import { connection } from '$lib/db';
 import { paramHelper } from '$lib/utils/search-param-helper.js';
 import { crimeCodeHelper } from '$lib/utils/crime-code-helper';
 import { locationHelper } from '$lib/utils/location-helper.js';
-import { ethnicityHelper } from '$lib/utils/ethnicity-helper.js';
-import { ageHelper } from '$lib/utils/age-helper.js';
 
 export async function load({ url }) {
-	// common search params from paramHelper in /lib/utils
+	// Get common search params from paramHelper
 	const cP = paramHelper(url.searchParams);
 
-	//convert crime categories to crime codes
+	console.log('timeGran :', cP.timeGranularity);
+
+	// Convert crime categories to crime codes
 	const crimeCodes = crimeCodeHelper(cP.crimeCategories);
-	//convert region array to regional locations
+	// Convert region array to regional locations
 	const locations = locationHelper(cP.laRegions);
-	// convert descent into ethnicities
-	const descent = ethnicityHelper(cP.descent);
-	// conver age into selected age groups
-	const ageRange = ageHelper(cP.ageRange);
-	const ageCondition = ageRange
-		? ageRange.min === null
-			? 'AND v.AGE IS NULL'
-			: `AND v.AGE >= ${ageRange.min} AND v.AGE <= ${ageRange?.max}`
-		: '';
 
-	// TODO: implement demographic query
-	const queryParams = [crimeCodes];
-
-	// do not contact db server if page is empty
+	// Check if filters are applied
 	const hasFilters =
 		cP.crimeCategories?.length > 0 ||
 		cP.laRegions?.length > 0 ||
@@ -37,7 +25,7 @@ export async function load({ url }) {
 		cP.ageRange;
 
 	if (!hasFilters) {
-		// no filters = empty result
+		// No filters, return empty result
 		return {
 			formParams: cP,
 			result: {
@@ -48,53 +36,66 @@ export async function load({ url }) {
 		};
 	}
 
+	// SQL Query with dynamic time granularity
 	const query = `
-	SELECT DISTINCT 
-        ct.CRIMECODE,
-        ct.DESCRIPTION AS CRIME_TYPE,
-		ci.INCIDENTDATE,
-		l.AREA,
-		v.ETHNICITY,
-		v.SEX,
-		v.AGE,
-        COUNT(*) as INCIDENT_COUNT
-    FROM CRIMEINCIDENT ci
-    JOIN CRIMEINCIDENTCRIMETYPE cict ON ci.INCIDENTID = cict.INCIDENTID 
-    JOIN CRIMETYPE ct ON cict.CRIMECODE = ct.CRIMECODE
-	JOIN LOCATION l ON ci.INCIDENTID = l.INCIDENTID
-	JOIN VICTIM v ON ci.INCIDENTID = v.INCIDENTID
-    WHERE 1=1 
-		${crimeCodes.length ? `AND cict.CRIMECODE IN ('${crimeCodes.join("','")}')` : ''}
-        ${locations.length ? `AND l.AREA IN ('${locations.join("','")}')` : ''}
-        ${cP.startDate ? `AND ci.INCIDENTDATE >= TO_DATE('${cP.startDate}', 'YYYY-MM-DD')` : ''}
-        ${cP.endDate ? `AND ci.INCIDENTDATE <= TO_DATE('${cP.endDate}', 'YYYY-MM-DD')` : ''}
-        ${descent.length ? `AND v.ETHNICITY IN ('${descent.join("','")}')` : ''}
-        ${cP.gender ? `AND v.SEX IN ('${cP.gender}')` : ''}
-        ${ageCondition}
-    GROUP BY 
-        ct.CRIMECODE,
-        ct.DESCRIPTION,
-		ci.INCIDENTDATE,
-		l.AREA,
-		v.ETHNICITY,
-		v.SEX,
-		v.AGE
-    ORDER BY INCIDENT_COUNT DESC`;
+	WITH CrimeData AS (
+		SELECT 
+			ct.CRIMECODE,
+			ct.DESCRIPTION AS CRIME_TYPE,
+			CASE 
+				WHEN '${cP.timeGranularity}' = 'Year' THEN TO_CHAR(ci.INCIDENTDATE, 'YYYY')
+				WHEN '${cP.timeGranularity}' = 'Quarter' THEN TO_CHAR(ci.INCIDENTDATE, 'YYYY') || '-Q' || TO_CHAR(ci.INCIDENTDATE, 'Q')
+				WHEN '${cP.timeGranularity}' = 'Month' THEN TO_CHAR(ci.INCIDENTDATE, 'YYYY-MM')
+			END AS TIME_PERIOD
+		FROM 
+			CRIMEINCIDENT ci
+		JOIN 
+			CRIMEINCIDENTCRIMETYPE cict ON ci.INCIDENTID = cict.INCIDENTID 
+		JOIN 
+			CRIMETYPE ct ON cict.CRIMECODE = ct.CRIMECODE
+		JOIN 
+			LOCATION l ON ci.INCIDENTID = l.INCIDENTID
+		JOIN 
+			VICTIM v ON ci.INCIDENTID = v.INCIDENTID
+		WHERE 
+			ci.INCIDENTDATE >= TO_DATE('2020-01-01', 'YYYY-MM-DD')
+			${crimeCodes.length ? `AND ct.CRIMECODE IN ('${crimeCodes.join("','")}')` : ''}
+			${locations.length ? `AND l.AREA IN ('${locations.join("','")}')` : ''}
+			${cP.startDate ? `AND ci.INCIDENTDATE >= TO_DATE('${cP.startDate}', 'YYYY-MM-DD')` : ''}
+			${cP.endDate ? `AND ci.INCIDENTDATE <= TO_DATE('${cP.endDate}', 'YYYY-MM-DD')` : ''}
+	)
+		SELECT 
+			CRIMECODE,
+			CRIME_TYPE,
+			TIME_PERIOD,
+			COUNT(*) AS INCIDENT_COUNT
+		FROM 
+			CrimeData
+		GROUP BY 
+			CRIMECODE,
+			CRIME_TYPE,
+			TIME_PERIOD
+		ORDER BY 
+			TIME_PERIOD ASC, INCIDENT_COUNT DESC`;
 
+	// Execute the query
 	const result = await connection.execute(query);
-	console.log('=========SPACE============');
-	console.log('Query Params: ', queryParams);
-	console.log('Start Date: ', cP.startDate);
-	console.log('End Date: ', cP.endDate);
-	console.log('CrimeType: ', cP.crimeCategories);
+
+	// Log query information for debugging
+	console.log('=========QUERY LOG============');
+	console.log('Query Params: ', cP);
+	console.log('Crime Type: ', cP.crimeCategories);
 	console.log('Columns: ', result.metaData?.map((col) => col.name) || []);
 	console.log('Result Rows: ', result.rows);
 	console.log('Crime Codes: ', crimeCodes);
 	console.log('Locations: ', locations);
 	console.log('Descent: ', cP.descent);
+	console.log('Time Granularity:', cP.timeGranularity);
 	console.log('SQL Query:', query);
+	console.log('Start Date: ', cP.startDate);
+	console.log('End Date: ', cP.endDate);
 
-	// this data gets returned to the page component
+	// Return data to the page component
 	return {
 		formParams: cP,
 		result: {
