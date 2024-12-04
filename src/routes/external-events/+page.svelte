@@ -14,8 +14,8 @@
 
 	// Event options and their corresponding date ranges
 	const events = [
-		{ label: 'COVID-19 Pandemic', startDate: '2020-01-01', endDate: '2023-05-05' },
-		{ label: 'Economic Recession', startDate: '2021-01-01', endDate: '2022-12-31' },
+		{ label: 'COVID-19 Pandemic', startDate: '2020-01-01', endDate: '2020-12-31' },
+		{ label: 'Economic Recession', startDate: '2021-01-01', endDate: '2021-12-31' },
 		{ label: 'Custom Event', startDate: '', endDate: '' }
 	];
 
@@ -25,17 +25,14 @@
 		endDate: data.formParams.endDate ?? events[0].endDate,
 		crimeCategories: data.formParams.crimeCategories,
 		laRegions: data.formParams.laRegions,
-		ageRange: data.formParams.ageRange ?? '',
-		gender: data.formParams.gender ?? '',
-		descent: data.formParams.descent ?? '',
 		selectedEvent:
 			events.find(
 				(event) =>
 					event.startDate === (data.formParams.startDate ?? events[0].startDate) &&
 					event.endDate === (data.formParams.endDate ?? events[0].endDate)
 			) ?? events[0],
-		eventPeriodStart: 0,
-		eventPeriodEnd: 6
+		monthsBeforeEvent: data.formParams.monthsBeforeEvent ?? 0,
+		monthsAfterEvent: data.formParams.monthsAfterEvent ?? 6
 	});
 
 	function handleSubmission(e: any) {
@@ -54,11 +51,10 @@
 
 		params.append('startDate', formData.startDate);
 		params.append('endDate', formData.endDate);
-		params.append('ageRange', formData.ageRange);
-		params.append('gender', formData.gender);
-		params.append('descent', formData.descent);
-		params.append('eventPeriodStart', formData.eventPeriodStart.toString());
-		params.append('eventPeriodEnd', formData.eventPeriodEnd.toString());
+		params.append('eventPeriodStart', formData.monthsBeforeEvent.toString());
+		params.append('eventPeriodEnd', formData.monthsAfterEvent.toString());
+		params.append('monthsBeforeEvent', formData.monthsBeforeEvent.toString());
+		params.append('monthsAfterEvent', formData.monthsAfterEvent.toString());
 
 		goto(`/external-events?${params.toString()}`, { noScroll: true });
 	}
@@ -84,14 +80,6 @@
 			};
 		}
 	}
-
-	// instantiate chart data
-	interface DataSet {
-		label: string;
-		data: number[];
-		borderColor: string;
-		fill: boolean;
-	}
 	// instantiate Chart Component
 	let chartCanvas: HTMLCanvasElement;
 	let chart: Chart;
@@ -105,10 +93,8 @@
 				crimeDesc: string;
 				date: string;
 				location: string;
-				ethnicity: string;
-				gender: string;
-				age: number;
 				incidentCount: number;
+				eventPeriod: string;
 			};
 
 			const formatDate = (dateStr: string) => {
@@ -124,110 +110,59 @@
 					({
 						crimeCode: row[0],
 						crimeDesc: row[1],
-						date: formatDate(row[2]),
+						date: row[2],
 						location: row[3],
-						ethnicity: row[4],
-						gender: row[5],
-						age: row[6],
-						incidentCount: row[7]
+						incidentCount: row[4],
+						eventPeriod: row[5]
 					}) satisfies crimeRow
 			);
 
-			// group by demographics and proportion
-			const demographicMap = new Map<
-				string,
-				{
-					label: string;
-					monthlyData: Map<string, number>;
-				}
-			>();
+			// group by period and date
+			const eventMap = new Map<string, Map<string, number>>();
 
-			// track most common crime committed at that location from all those crimes
-			const crimeStats = $state(new Map<string, Map<string, { crime: string; count: number }>>());
-
-			// initialize periods
-			demographicMap.set('Before Event', {
-				label: 'Before Event',
-				monthlyData: new Map()
-			});
-			demographicMap.set('During Event', {
-				label: 'During Event',
-				monthlyData: new Map()
-			});
-			demographicMap.set('After Event', {
-				label: 'After Event',
-				monthlyData: new Map()
+			['Before Event', 'During Event', 'After Event'].forEach((period) => {
+				eventMap.set(period, new Map());
 			});
 
-			typedRows.forEach((row) => {
-				const rowDate = new Date(row.date);
-				const eventStart = new Date(formData.selectedEvent.startDate);
-				const eventEnd = new Date(formData.selectedEvent.endDate);
-
-				// calc ranges for before and after event
-				const beforeStart = new Date(eventStart);
-				beforeStart.setMonth(beforeStart.getMonth() - formData.eventPeriodStart);
-				const afterEnd = new Date(eventEnd);
-				afterEnd.setMonth(afterEnd.getMonth() + formData.eventPeriodEnd);
-
-				let key = '';
-
-				if (rowDate >= beforeStart && rowDate < eventStart) {
-					key = 'Before Event';
-				} else if (rowDate >= eventStart && rowDate <= eventEnd) {
-					key = 'During Event';
-				} else if (rowDate > eventEnd && rowDate <= afterEnd) {
-					key = 'After Event';
-				}
-
-				if (key === '') {
-					return;
-				}
-
-				if (!demographicMap.has(key)) {
-					demographicMap.set(key, {
-						label: key,
-						monthlyData: new Map()
-					});
-				}
-				// get all demographic data at region
-				const entry = demographicMap.get(key)!;
-
-				// get current incident count
-				const currentCount = entry.monthlyData.get(row.date) || 0;
-
-				// add new incidents to total count for this date
-				entry.monthlyData.set(row.date, currentCount + row.incidentCount);
-			});
-
-			// convert datasets
-			const datasets = Array.from(demographicMap.values())
-				.map(
-					(demo, index) =>
-						({
-							label: demo.label,
-							data: Array.from(demo.monthlyData.values()),
-							borderColor: getChartColor(index),
-							fill: false
-						}) satisfies DataSet
-				)
-				.sort(
-					(a: DataSet, b: DataSet) =>
-						b.data.reduce((sum: number, val: number) => sum + val, 0) -
-						a.data.reduce((sum: number, val: number) => sum + val, 0)
-				)
-				.slice(0, 10);
-
-			// sort months chronilogically
-			const months = [...new Set(typedRows.map((row) => row.date))].sort(
+			// process all dates first to ensure complete date range
+			const allDates = [...new Set(typedRows.map((row) => formatDate(row.date)))].sort(
 				(a, b) => new Date(a).getTime() - new Date(b).getTime()
 			);
 
+			// then initialize all dates for each period with 0
+			eventMap.forEach((periodData) => {
+				allDates.forEach((date) => {
+					periodData.set(date, 0);
+				});
+			});
+
+			// sum incident counts
+			typedRows.forEach((row) => {
+				const periodData = eventMap.get(row.eventPeriod);
+				if (periodData) {
+					const formattedDate = formatDate(row.date);
+					const currentCount = periodData.get(formattedDate) || 0;
+					periodData.set(formattedDate, currentCount + row.incidentCount);
+				}
+			});
+
+			// convert datasets
+			const datasets = Array.from(eventMap.entries()).map(([period, data], index) => ({
+				label: period,
+				data: allDates.map((date) => data.get(date) || 0),
+				borderColor: getChartColor(index),
+				fill: false,
+				tension: 0.2,
+				borderWidth: 3,
+				pointRadius: 4,
+				pointHoverRadius: 6,
+				spanGaps: true
+			}));
 			// instantiate chart
 			chart = new Chart(chartCanvas, {
 				type: 'line',
 				data: {
-					labels: months,
+					labels: allDates,
 					datasets
 				},
 				options: {
@@ -254,9 +189,8 @@
 						tooltip: {
 							callbacks: {
 								label: (context) => {
-									// retrieve total incidents
-									const value = context.raw as number;
-									return `${value} incidents`;
+									const value = context.raw;
+									return `${context.dataset.label}: ${(value as number).toLocaleString()} incidents`;
 								}
 							}
 						}
@@ -275,20 +209,11 @@
 								text: 'Month/Year'
 							},
 							ticks: {
-								callback: function (index) {
-									// extra spacing after december
-									const label = months[index as number];
-									return label?.includes('Dec') ? label + '   ' : label;
+								callback: (_, index) => {
+									return allDates[index] || '';
 								},
-								maxRotation: 45, // angle labels
+								maxRotation: 45,
 								minRotation: 45
-							},
-							grid: {
-								color: (context) => {
-									// mark year changes
-									const label = months[context.index];
-									return label?.includes('Jan') ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)';
-								}
 							}
 						}
 					}
@@ -345,7 +270,7 @@
 								}}
 								onEndDateChange={(newDate: any) => {
 									formData.endDate = newDate;
-									handleDateChange;
+									handleDateChange();
 								}}
 							/>
 						</div>
@@ -359,20 +284,20 @@
 								type="range"
 								min="0"
 								max="12"
-								bind:value={formData.eventPeriodStart}
+								bind:value={formData.monthsBeforeEvent}
 								class="range range-primary"
 							/>
-							<span class="text-gray-600">{formData.eventPeriodStart} before</span>
+							<span class="text-gray-600">{formData.monthsBeforeEvent} before</span>
 						</div>
 						<div class="mt-2 flex items-center space-x-4">
 							<input
 								type="range"
 								min="0"
 								max="12"
-								bind:value={formData.eventPeriodEnd}
+								bind:value={formData.monthsAfterEvent}
 								class="range range-primary"
 							/>
-							<span class="text-gray-600">{formData.eventPeriodEnd} after</span>
+							<span class="text-gray-600">{formData.monthsAfterEvent} after</span>
 						</div>
 					</div>
 
@@ -405,7 +330,7 @@
 				<!-- Right Column: Chart Placeholder -->
 				<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
 					<!-- Chart Generation (80% viewport height) -->
-					<div class="relative h-[80vh] w-full">
+					<div class="relative h-[80vh] w-full tooltip={data.query}">
 						{#if isLoading}
 							<div
 								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"

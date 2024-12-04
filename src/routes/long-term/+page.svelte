@@ -1,22 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { Chart } from 'chart.js/auto';
-	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import CrimeCategoriesSelect from '$lib/components/CrimeCategoriesSelect.svelte';
 	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
-	import VictimDemographicsSelect from '$lib/components/VictimDemographicsSelect.svelte';
-	import {
-		CRIME_CATEGORIES,
-		LA_REGIONS,
-		VICTIM_AGE,
-		VICTIM_GENDER,
-		VICTIM_DESCENT
-	} from '../../constants';
+
+	import { CRIME_CATEGORIES, LA_REGIONS } from '../../constants';
 	import { getChartColor } from '$lib/utils/chart-colors';
 	import { LA_REGIONS_MAP } from '$lib/utils/location-map';
-	import { writable } from 'svelte/store';
-
-	let timeGranularity = $state('Month');
 
 	// Get data from server
 	let { data } = $props();
@@ -25,13 +15,11 @@
 
 	// Form Data Storage (empty string by default or URL loaded)
 	let formData = $state({
-		startDate: data.formParams.startDate ?? '',
-		endDate: data.formParams.endDate ?? '',
+		startDate: data.formParams.startDate ?? '2020-01-01',
+		endDate: data.formParams.endDate ?? '2024-12-31',
 		crimeCategories: data.formParams.crimeCategories,
 		laRegions: data.formParams.laRegions,
-		ageRange: data.formParams.ageRange ?? '',
-		gender: data.formParams.gender ?? '',
-		descent: data.formParams.descent ?? ''
+		timeGranularity: data.formParams.timeGranularity ?? 'Year'
 	});
 
 	// TODO adjust query to location areas (from demographic), ignore descents / age / sex. non-performant condition currently.
@@ -52,9 +40,7 @@
 
 		params.append('startDate', formData.startDate);
 		params.append('endDate', formData.endDate);
-		params.append('ageRange', formData.ageRange);
-		params.append('gender', formData.gender);
-		params.append('descent', formData.descent);
+		params.append('timeGranularity', formData.timeGranularity);
 
 		goto(`/long-term?${params.toString()}`, { noScroll: true });
 	}
@@ -118,6 +104,7 @@
 			// track most common crime committed at that location from all those crimes
 			const crimeStats = $state(new Map<string, Map<string, { crime: string; count: number }>>());
 
+			// TODO fix map generation
 			typedRows.forEach((row) => {
 				let key = '';
 
@@ -278,19 +265,45 @@
 			</h2>
 			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
 				This query analyzes the changes in specific crime categories (e.g., theft, assault,
-				burglary) over time, focusing on the 7 time period from 2020 to the present.
+				burglary) over time, focusing on the time period from 2020 to the present.
 			</p>
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6 text-base">
-					<DateRangePicker
-						startDate={formData.startDate}
-						endDate={formData.endDate}
-						minDate="2020-01-01"
-						maxDate="2024-11-15"
-						onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
-						onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
-					/>
+					<!-- Time Granularity Radio Buttons -->
+					<label class="mb-5 block font-medium">Adjust Time Granularity:</label>
+					<div class="flex space-x-4">
+						<label class="flex items-center space-x-2">
+							<input
+								type="radio"
+								name="radio-2"
+								bind:group={formData.timeGranularity}
+								class="radio-primary radio"
+								value="Year"
+							/>
+							<span>Year</span>
+						</label>
+						<label class="flex items-center space-x-2">
+							<input
+								type="radio"
+								name="radio-2"
+								bind:group={formData.timeGranularity}
+								class="radio-primary radio"
+								value="Month"
+							/>
+							<span>Month</span>
+						</label>
+						<label class="flex items-center space-x-2">
+							<input
+								type="radio"
+								name="radio-2"
+								bind:group={formData.timeGranularity}
+								class="radio-primary radio"
+								value="Quarter"
+							/>
+							<span>Quarter</span>
+						</label>
+					</div>
 					<!-- Crime Categories Multi-Select -->
 					<div>
 						<CrimeCategoriesSelect
@@ -307,43 +320,6 @@
 							selectedRegions={formData.laRegions}
 							onRegionChange={(regions: any) => (formData.laRegions = regions)}
 						/>
-					</div>
-
-					<!-- Time Granularity Radio Buttons -->
-					<div>
-						<label class="mb-2 block font-medium">Adjust Time Granularity:</label>
-						<div class="flex space-x-4">
-							<label class="flex items-center space-x-2">
-								<input
-									type="radio"
-									name="radio-2"
-									bind:group={timeGranularity}
-									class="radio-primary radio"
-									value="Year"
-								/>
-								<span>Year</span>
-							</label>
-							<label class="flex items-center space-x-2">
-								<input
-									type="radio"
-									name="radio-2"
-									bind:group={timeGranularity}
-									class="radio-primary radio"
-									value="Month"
-								/>
-								<span>Month</span>
-							</label>
-							<label class="flex items-center space-x-2">
-								<input
-									type="radio"
-									name="radio-2"
-									bind:group={timeGranularity}
-									class="radio-primary radio"
-									value="Quarter"
-								/>
-								<span>Quarter</span>
-							</label>
-						</div>
 					</div>
 
 					<!-- Generate Trend Button -->

@@ -9,8 +9,11 @@ export const paramHelper = (params: URLSearchParams) => {
 	const eventPeriodStart = params.get('eventPeriodStart');
 	const eventPeriodEnd = params.get('eventPeriodEnd');
 	const filterBy = params.get('season');
-	const selectedSeason = params.getAll('seasons');
-	const selectedHoliday = params.getAll('holidays');
+	const selectedSeason = params.get('seasons');
+	const selectedHoliday = params.get('holidays');
+	const timeGranularity = params.get('timeGranularity');
+	const monthsBeforeEvent = params.get('monthsBeforeEvent');
+	const monthsAfterEvent = params.get('monthsAfterEvent');
 
 	return {
 		crimeCategories,
@@ -24,6 +27,9 @@ export const paramHelper = (params: URLSearchParams) => {
 		eventPeriodEnd,
 		filterBy,
 		selectedSeason,
-		selectedHoliday
+		selectedHoliday,
+		timeGranularity,
+		monthsBeforeEvent,
+		monthsAfterEvent
 	};
 };
