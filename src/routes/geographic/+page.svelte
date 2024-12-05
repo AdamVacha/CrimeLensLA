@@ -67,6 +67,10 @@
 		data: number[];
 		borderColor: string;
 		fill: boolean;
+		tension: number;
+		borderWidth: number;
+		pointRadius: number;
+		pointHoverRadius: number;
 	}
 	// instantiate Chart Component
 	let chartCanvas: HTMLCanvasElement;
@@ -81,9 +85,7 @@
 				crimeDesc: string;
 				date: string;
 				location: string;
-				ethnicity: string;
-				gender: string;
-				age: number;
+				weaponType: string;
 				incidentCount: number;
 			};
 
@@ -102,15 +104,13 @@
 						crimeDesc: row[1],
 						date: formatDate(row[2]),
 						location: row[3],
-						ethnicity: row[4],
-						gender: row[5],
-						age: row[6],
-						incidentCount: row[7]
+						weaponType: row[4],
+						incidentCount: row[5]
 					}) satisfies crimeRow
 			);
 
 			// group by demographics and proportion
-			const demographicMap = new Map<
+			const geographicMap = new Map<
 				string,
 				{
 					label: string;
@@ -119,7 +119,9 @@
 			>();
 
 			// track most common crime committed at that location from all those crimes
-			const crimeStats = $state(new Map<string, Map<string, { crime: string; count: number }>>());
+			const crimeStats = $state(
+				new Map<string, Map<string, { crime: string; count: number; weapon: string }>>()
+			);
 
 			typedRows.forEach((row) => {
 				let key = '';
@@ -137,23 +139,28 @@
 				// get map of all dates for this region or if we havnt tracked this date yet, instantiate it
 				const regionMap = crimeStats.get(key)!;
 				if (!regionMap.has(row.date)) {
-					regionMap.set(row.date, { crime: row.crimeDesc, count: 0 });
+					regionMap.set(row.date, {
+						crime: row.crimeDesc,
+						count: 0,
+						weapon: row.weaponType || 'None'
+					});
 				}
 				// get current crime stats on this date, store most committed crime
 				const currentStats = regionMap.get(row.date)!;
 				if (row.incidentCount > currentStats.count) {
 					currentStats.crime = row.crimeDesc;
 					currentStats.count = row.incidentCount;
+					currentStats.weapon = row.weaponType || 'None';
 				}
 
-				if (!demographicMap.has(key)) {
-					demographicMap.set(key, {
+				if (!geographicMap.has(key)) {
+					geographicMap.set(key, {
 						label: key,
 						monthlyData: new Map()
 					});
 				}
 				// get all demographic data at region
-				const entry = demographicMap.get(key)!;
+				const entry = geographicMap.get(key)!;
 
 				// get current incident count
 				const currentCount = entry.monthlyData.get(row.date) || 0;
@@ -163,14 +170,18 @@
 			});
 
 			// convert datasets
-			const datasets = Array.from(demographicMap.values())
+			const datasets = Array.from(geographicMap.values())
 				.map(
-					(demo, index) =>
+					(geo, index) =>
 						({
-							label: demo.label,
-							data: Array.from(demo.monthlyData.values()),
+							label: geo.label,
+							data: Array.from(geo.monthlyData.values()),
 							borderColor: getChartColor(index),
-							fill: false
+							fill: false,
+							tension: 0.3,
+							borderWidth: 3,
+							pointRadius: 2,
+							pointHoverRadius: 8
 						}) satisfies DataSet
 				)
 				.sort(
@@ -203,7 +214,7 @@
 					plugins: {
 						title: {
 							display: true,
-							text: `Crime Incidents by GeoGraphics (${formData.startDate} to ${formData.endDate})`,
+							text: `Crime Incidents by GeoGraphic Region (${formData.startDate} to ${formData.endDate})`,
 							font: {
 								size: 16,
 								weight: 'bold'
@@ -225,8 +236,8 @@
 									const stats = region ? crimeStats.get(region)?.get(date) : undefined;
 
 									return [
-										`${value} incidents`,
-										`Most common crime: ${stats?.crime || 'None'} with: ${stats?.count || 0} incidents`
+										`${region}: ${value} incidents`,
+										`Most common crime: ${stats?.crime || 'None'} with ${stats?.weapon || 'None'} as weapon`
 									];
 								}
 							}
@@ -246,11 +257,6 @@
 								text: 'Month/Year'
 							},
 							ticks: {
-								callback: function (index) {
-									// extra spacing after december
-									const label = months[index as number];
-									return label?.includes('Dec') ? label + '   ' : label;
-								},
 								maxRotation: 45, // angle labels
 								minRotation: 45
 							},
@@ -267,7 +273,6 @@
 			});
 		}
 	});
-	// TODO hover over shows actual query
 </script>
 
 <form method="POST" onsubmit={handleSubmission}>
