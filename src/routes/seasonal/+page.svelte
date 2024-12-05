@@ -7,10 +7,15 @@
 	import { seasonColors } from '$lib/utils/season-chart-colors';
 	import { holidayColors } from '$lib/utils/holiday-chart-colors';
 	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
+	import QueryModal from '$lib/components/QueryModal.svelte';
 
 	// Get data from server
 	let { data } = $props();
-	// set loading spinner
+	// Receive the raw SQL query from the server.
+	let query = $state('');
+	$effect(() => {
+		query = data.query ?? '';
+	}); // set loading spinner
 	let isLoading = $state(false);
 
 	// Form Data Storage (empty string by default or URL loaded)
@@ -410,9 +415,11 @@
 				</div>
 
 				<!-- Right Column: Chart Placeholder -->
-				<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
+				<div
+					class="relative flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner"
+				>
 					<!-- Chart Generation (80% viewport height) -->
-					<div class="relative h-[80vh] w-full">
+					<div class="relative h-[80vh] w-full pb-6">
 						{#if isLoading}
 							<div
 								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"
@@ -426,6 +433,9 @@
 							</div>
 						{/if}
 						<canvas bind:this={chartCanvas}></canvas>
+					</div>
+					<div class=" absolute bottom-6 right-6">
+						<QueryModal {query} />
 					</div>
 				</div>
 			</div>
