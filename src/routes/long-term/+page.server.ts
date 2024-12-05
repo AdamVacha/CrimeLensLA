@@ -98,6 +98,7 @@ export async function load({ url }) {
 	// Return data to the page component
 	return {
 		formParams: cP,
+		query,
 		result: {
 			rows: result.rows,
 			rowsAffected: result.rowsAffected,
