@@ -256,53 +256,67 @@
 <form method="POST" onsubmit={handleSubmission}>
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
-		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
-			<h1 class="mb-8 mt-4 text-center text-2xl font-semibold text-black">
+		<div class="max-w-8xl w-full rounded-lg bg-gray-100 p-10 pb-20 shadow-lg">
+			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
 				Long-Term Crime Trends
 			</h1>
-			<h2 class="text-grey text-grey-700 mb-2 mt-4 text-center text-lg font-semibold">
-				“How have different types of crimes evolved in Los Angeles from 2020 to present?”
-			</h2>
-			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
-				This query analyzes the changes in specific crime categories (e.g., theft, assault,
-				burglary) over time, focusing on the time period from 2020 to the present.
-			</p>
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6 text-base">
+					<h2 class="text-grey text-grey-700 mb-2 text-lg">
+						“How have different types of crimes evolved in Los Angeles from 2020 to present?”
+						<div
+							class="in-line tooltip tooltip-right"
+							data-tip="This query analyzes the changes in specific crime types over time, focusing on the time period from 2020 to the present."
+						>
+							<div
+								class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-blue-400 font-bold text-white hover:bg-blue-500"
+							>
+								?
+							</div>
+						</div>
+					</h2>
 					<!-- Time Granularity Radio Buttons -->
-					<label class="mb-5 block font-medium">Adjust Time Granularity:</label>
-					<div class="flex space-x-4">
-						<label class="flex items-center space-x-2">
-							<input
-								type="radio"
-								name="radio-2"
-								bind:group={formData.timeGranularity}
-								class="radio-primary radio"
-								value="Year"
-							/>
-							<span>Year</span>
-						</label>
-						<label class="flex items-center space-x-2">
-							<input
-								type="radio"
-								name="radio-2"
-								bind:group={formData.timeGranularity}
-								class="radio-primary radio"
-								value="Month"
-							/>
-							<span>Month</span>
-						</label>
-						<label class="flex items-center space-x-2">
-							<input
-								type="radio"
-								name="radio-2"
-								bind:group={formData.timeGranularity}
-								class="radio-primary radio"
-								value="Quarter"
-							/>
-							<span>Quarter</span>
-						</label>
+					<div>
+						<label for="timeGranularity" class="mb-2 block font-medium"
+							>Adjust Time Granularity:</label
+						>
+						<div class="flex space-x-4">
+							<label class="flex items-center space-x-2">
+								<input
+									type="radio"
+									id="timeGranularity"
+									name="radio-2"
+									bind:group={formData.timeGranularity}
+									class="radio-primary radio"
+									value="Year"
+								/>
+								<span>Year</span>
+							</label>
+
+							<label class="flex items-center space-x-2">
+								<input
+									type="radio"
+									id="timeGranularity"
+									name="radio-2"
+									bind:group={formData.timeGranularity}
+									class="radio-primary radio"
+									value="Month"
+								/>
+								<span>Month</span>
+							</label>
+							<label class="flex items-center space-x-2">
+								<input
+									type="radio"
+									id="timeGranularity"
+									name="radio-2"
+									bind:group={formData.timeGranularity}
+									class="radio-primary radio"
+									value="Quarter"
+								/>
+								<span>Quarter</span>
+							</label>
+						</div>
 					</div>
 					<!-- Crime Categories Multi-Select -->
 					<div>

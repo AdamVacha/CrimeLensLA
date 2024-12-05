@@ -267,34 +267,42 @@
 <form method="POST" onsubmit={handleSubmission}>
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
-		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-4 pb-20 shadow-lg">
-			<h1 class="mb-4 mt-4 text-center text-2xl font-semibold text-black">
+		<div class="max-w-8xl w-full rounded-lg bg-gray-100 p-10 pb-20 shadow-lg">
+			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
 				Geographic Variation in Crime
 			</h1>
-			<h2 class="text-grey text-grey-700 mb-4 mt-4 text-center text-lg font-semibold">
-				“Which neighborhoods in Los Angeles have experienced the highest or lowest crime rates, and
-				how has this changed over time?”
-			</h2>
-			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
-				This query focuses on the geographic distribution of crimes across different neighborhoods
-				or reporting districts in Los Angeles.
-			</p>
-			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[38%_60%]">
+			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6 text-base">
-					<label for="date-range-picker" class="mb-2 block text-base font-medium"
-						>Select Date Range:</label
-					>
-					// TODO stop the date from reloading the entire server its reactive rn
-					<DateRangePicker
-						startDate={formData.startDate}
-						endDate={formData.endDate}
-						minDate="2020-01-01"
-						maxDate="2024-11-15"
-						onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
-						onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
-					/>
+					<h2 class="text-grey text-grey-700 mb-2 text-lg">
+						“Which neighborhoods in Los Angeles have experienced the highest or lowest crime rates,
+						and how has this changed over time?” <div
+							class="in-line tooltip tooltip-right"
+							data-tip="	This query focuses on the geographic distribution of crimes across different neighborhoods
+					or reporting districts in Los Angeles."
+						>
+							<div
+								class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-blue-400 font-bold text-white hover:bg-blue-500"
+							>
+								?
+							</div>
+						</div>
+					</h2>
 
+					// TODO stop the date from reloading the entire server its reactive rn
+					<div>
+						<label for="date-range-picker" class="mb-2 block text-base font-medium"
+							>Select Date Range:</label
+						>
+						<DateRangePicker
+							startDate={formData.startDate}
+							endDate={formData.endDate}
+							minDate="2020-01-01"
+							maxDate="2024-11-15"
+							onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
+							onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
+						/>
+					</div>
 					<!-- Crime Categories Multi-Select -->
 					<div>
 						<CrimeCategoriesSelect

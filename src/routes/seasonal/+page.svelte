@@ -323,25 +323,33 @@
 <form method="POST" onsubmit={handleSubmission}>
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
-		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-4 pb-10 shadow-lg">
-			<h1 class="mb-2 mt-4 text-center text-2xl font-semibold">Seasonal Crime Trends</h1>
-			<h2 class="text-grey text-grey-700 mb-2 mt-4 text-center text-lg font-semibold">
-				"How do crime rates change during different seasons or holidays?"
-			</h2>
-			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
-				This query explores how crime rates change during different seasons (e.g., summer vs.
-				winter) or specific times like holidays (e.g., New Year’s Eve, Thanksgiving).
-			</p>
+		<div class="max-w-8xl w-full rounded-lg bg-gray-100 p-10 pb-10 shadow-lg">
+			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold">Seasonal Crime Trends</h1>
 
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
-				<div class="space-y-6">
+				<div class="m-2 space-y-6">
+					<h2 class="text-grey text-grey-700 mb-2 text-lg">
+						"How do crime rates change during different seasons or holidays?"
+						<div
+							class="in-line tooltip tooltip-right"
+							data-tip="This query explores how crime rates change during different seasons (e.g., summer vs.
+			winter) or specific times like holidays (e.g., New Year’s Eve, Thanksgiving)"
+						>
+							<div
+								class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-blue-400 font-bold text-white hover:bg-blue-500"
+							>
+								?
+							</div>
+						</div>
+					</h2>
 					<!-- Filter By (Season/Holiday) -->
 					<div>
-						<label class="mb-2 block font-medium">Filter by:</label>
+						<label for="filterBy" class="mb-2 block font-medium">Filter by:</label>
 						<div class="flex space-x-4">
 							<label class="flex items-center space-x-2">
 								<input
+									id="filterBy"
 									type="radio"
 									name="radio-2"
 									bind:group={formData.filterBy}
@@ -362,18 +370,19 @@
 							</label>
 						</div>
 					</div>
-					<label for="date-range-picker" class="mb-2 block text-base font-medium"
-						>Select Date Range:</label
-					>
-					<DateRangePicker
-						startDate={formData.startDate}
-						endDate={formData.endDate}
-						minDate="2020-01-01"
-						maxDate="2024-11-15"
-						onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
-						onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
-					/>
-
+					<div>
+						<label for="date-range-picker" class="mb-2 block text-base font-medium"
+							>Select Date Range:</label
+						>
+						<DateRangePicker
+							startDate={formData.startDate}
+							endDate={formData.endDate}
+							minDate="2020-01-01"
+							maxDate="2024-11-15"
+							onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
+							onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
+						/>
+					</div>
 					<!-- Crime Categories Multi-Select -->
 					<div>
 						<CrimeCategoriesSelect

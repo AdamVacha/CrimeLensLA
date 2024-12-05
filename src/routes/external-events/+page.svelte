@@ -226,25 +226,32 @@
 <form method="POST" onsubmit={handleSubmission}>
 	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
-		<div class="w-full max-w-7xl rounded-lg bg-gray-100 p-8 pb-20 shadow-lg">
-			<h1 class="mb-4 mt-4 text-center text-2xl font-semibold">
+		<div class="max-w-8xl w-full rounded-lg bg-gray-100 p-10 pb-20 shadow-lg">
+			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold">
 				External Events Influence on Crime
 			</h1>
-			<h2 class="text-grey text-grey-700 mb-4 mt-4 text-center text-lg font-semibold">
-				“How do big events, like natural disasters or major political changes, affect crime rates?"
-			</h2>
-			<p class="mx-auto mb-6 max-w-4xl text-lg leading-relaxed text-gray-600">
-				This query investigates the relationship between crime trends and major external events,
-				such as economic recession caused by the COVID-19 pandemic.
-			</p>
 
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6">
+					<h2 class="text-grey text-grey-700 mb-2 text-lg">
+						“How do big events, like natural disasters or major political changes, affect crime
+						rates?" <div
+							class="in-line tooltip tooltip-right"
+							data-tip="This query investigates the relationship between crime trends and major external events, such as economic recession caused by the COVID-19 pandemic. Users can specify the time period before, during, and after these events, as well as the types of crimes they wish to analyze."
+						>
+							<div
+								class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-blue-400 font-bold text-white hover:bg-blue-500"
+							>
+								?
+							</div>
+						</div>
+					</h2>
 					<!-- Select or Add Event -->
 					<div>
-						<label class="mb-2 block font-medium">Select or Add an Event:</label>
+						<label for="event-select" class="mb-2 block font-medium">Select or Add an Event:</label>
 						<select
+							id="event-select"
 							bind:value={formData.selectedEvent}
 							class="select select-primary mb-2 w-full max-w-xs bg-white text-black"
 							onchange={updateDateRange}
@@ -278,26 +285,30 @@
 
 					<!-- Define Event Period -->
 					<div>
-						<label class="mb-2 block font-medium">Define Event Period (Months):</label>
+						<label for="monthsBeforeEvent" class="mb-2 block font-medium"
+							>Define Event Period:</label
+						>
 						<div class="flex items-center space-x-4">
 							<input
+								id="monthsBeforeEvent"
 								type="range"
 								min="0"
 								max="12"
 								bind:value={formData.monthsBeforeEvent}
 								class="range range-primary"
 							/>
-							<span class="text-gray-600">{formData.monthsBeforeEvent} before</span>
+							<span class="text-gray-600">{formData.monthsBeforeEvent} months before</span>
 						</div>
 						<div class="mt-2 flex items-center space-x-4">
 							<input
+								id="monthsAfterEvent"
 								type="range"
 								min="0"
 								max="12"
 								bind:value={formData.monthsAfterEvent}
 								class="range range-primary"
 							/>
-							<span class="text-gray-600">{formData.monthsAfterEvent} after</span>
+							<span class="text-gray-600">{formData.monthsAfterEvent} months after</span>
 						</div>
 					</div>
 
