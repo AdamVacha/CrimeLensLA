@@ -3,13 +3,18 @@
 	import { Chart } from 'chart.js/auto';
 	import CrimeCategoriesSelect from '$lib/components/CrimeCategoriesSelect.svelte';
 	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
-
 	import { CRIME_CATEGORIES, LA_REGIONS } from '../../constants';
+	import QueryModal from '$lib/components/QueryModal.svelte';
 	import { getChartColor } from '$lib/utils/chart-colors';
 	import { LA_REGIONS_MAP } from '$lib/utils/location-map';
 
 	// Get data from server
 	let { data } = $props();
+	// Receive the raw SQL query from the server.
+	let query = $state('');
+	$effect(() => {
+		query = data.query ?? '';
+	});
 	// set loading spinner
 	let isLoading = $state(false);
 
@@ -345,12 +350,13 @@
 				</div>
 
 				<!-- Right Column: Chart Placeholder -->
-				<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
-					<!-- Chart Generation (80% viewport height) -->
-					<div class="relative h-[80vh] w-full">
+				<div
+					class="relative flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner"
+				>
+					<div class="relative h-[90vh] w-full">
 						{#if isLoading}
 							<div
-								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"
+								class="bg-grey-100/80 inset-0 ml-2 flex items-center justify-center backdrop-blur-sm"
 							>
 								<div class="text-center">
 									<div
@@ -361,6 +367,9 @@
 							</div>
 						{/if}
 						<canvas bind:this={chartCanvas}></canvas>
+					</div>
+					<div class="absolute bottom-6 right-6">
+						<QueryModal {query} />
 					</div>
 				</div>
 			</div>

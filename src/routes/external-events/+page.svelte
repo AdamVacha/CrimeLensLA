@@ -6,9 +6,15 @@
 	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
 	import { CRIME_CATEGORIES, LA_REGIONS } from '../../constants';
 	import { getChartColor } from '$lib/utils/chart-colors';
+	import QueryModal from '$lib/components/QueryModal.svelte';
 
 	// Get data from server
 	let { data } = $props();
+	// Receive the raw SQL query from the server.
+	let query = $state('');
+	$effect(() => {
+		query = data.query ?? '';
+	});
 	// set loading spinner
 	let isLoading = $state(false);
 
@@ -339,7 +345,9 @@
 				</div>
 
 				<!-- Right Column: Chart Placeholder -->
-				<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
+				<div
+					class="relative flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner"
+				>
 					<!-- Chart Generation (80% viewport height) -->
 					<div class="relative h-[80vh] w-full tooltip={data.query}">
 						{#if isLoading}
@@ -355,6 +363,9 @@
 							</div>
 						{/if}
 						<canvas bind:this={chartCanvas}></canvas>
+					</div>
+					<div class="absolute bottom-6 right-6">
+						<QueryModal {query} />
 					</div>
 				</div>
 			</div>

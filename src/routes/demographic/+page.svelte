@@ -5,6 +5,7 @@
 	import CrimeCategoriesSelect from '$lib/components/CrimeCategoriesSelect.svelte';
 	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
 	import VictimDemographicsSelect from '$lib/components/VictimDemographicsSelect.svelte';
+	import QueryModal from '../../lib/components/QueryModal.svelte';
 	import {
 		CRIME_CATEGORIES,
 		LA_REGIONS,
@@ -17,6 +18,11 @@
 
 	// Get data from server
 	let { data } = $props();
+	// Receive the raw SQL query from the server.
+	let query = $state('');
+	$effect(() => {
+		query = data.query ?? '';
+	});
 	// set loading spinner
 	let isLoading = $state(false);
 
@@ -53,6 +59,7 @@
 
 		goto(`/demographic?${params.toString()}`, { noScroll: true });
 	}
+
 	// instantiate chart data
 	interface DataSet {
 		label: string;
@@ -292,7 +299,7 @@
 							data-tip="Explore how demographic factors such as age, gender, and descent have influenced crime rates during the specified time period, highlighting which victim groups were most impacted by different types of crimes."
 						>
 							<div
-								class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-blue-400 font-bold text-white hover:bg-blue-500"
+								class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-primary font-bold text-white hover:bg-blue-500"
 							>
 								?
 							</div>
@@ -344,11 +351,12 @@
 						</button>
 					</div>
 				</div>
-
-				<!-- Chart -->
-				<div class="flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner">
-					<!-- Chart Generation (80% viewport height) -->
-					<div class="relative h-[80vh] w-full">
+				<!-- Right Column: Chart -->
+				<div
+					class="relative flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner"
+				>
+					<!-- Chart Area -->
+					<div class="relative h-[90vh] w-full">
 						{#if isLoading}
 							<div
 								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"
@@ -362,6 +370,9 @@
 							</div>
 						{/if}
 						<canvas bind:this={chartCanvas}></canvas>
+					</div>
+					<div class="absolute bottom-6 right-6">
+						<QueryModal {query} />
 					</div>
 				</div>
 			</div>
