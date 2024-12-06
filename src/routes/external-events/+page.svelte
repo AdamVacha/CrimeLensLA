@@ -348,8 +348,8 @@
 				<div
 					class="relative flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner"
 				>
-					<!-- Chart Generation (80% viewport height) -->
-					<div class="relative h-[80vh] w-full tooltip={data.query}">
+					<!-- Chart Generation -->
+					<div class="relative h-[90vh] w-full">
 						{#if isLoading}
 							<div
 								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"
