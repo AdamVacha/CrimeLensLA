@@ -49,13 +49,7 @@
 
 		goto(`/long-term?${params.toString()}`, { noScroll: true });
 	}
-	// instantiate chart data
-	interface DataSet {
-		label: string;
-		data: number[];
-		borderColor: string;
-		fill: boolean;
-	}
+
 	// instantiate Chart Component
 	let chartCanvas: HTMLCanvasElement;
 	let chart: Chart;
@@ -64,121 +58,75 @@
 		if (chartCanvas && data.result?.rows) {
 			if (chart) chart.destroy();
 
-			type crimeRow = {
+			type CrimeRow = {
 				crimeCode: string;
-				crimeDesc: string;
-				date: string;
-				location: string;
-				ethnicity: string;
-				gender: string;
-				age: number;
+				crimeType: string;
+				timePeriod: string;
 				incidentCount: number;
 			};
 
-			const formatDate = (dateStr: string) => {
-				const date = new Date(dateStr);
-				return date.toLocaleDateString('en-US', {
-					month: 'short',
-					year: 'numeric'
-				});
+			const formatTimePeriod = (period: string) => {
+				if (period.includes('-Q')) {
+					const [year, quarter] = period.split('-Q');
+					return `Q${quarter} ${year}`;
+				}
+				if (period.includes('-')) {
+					const date = new Date(period);
+					return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+				}
+				return period; // Year only
 			};
 
 			const typedRows = data.result.rows.map(
 				(row: any) =>
 					({
 						crimeCode: row[0],
-						crimeDesc: row[1],
-						date: formatDate(row[2]),
-						location: row[3],
-						ethnicity: row[4],
-						gender: row[5],
-						age: row[6],
-						incidentCount: row[7]
-					}) satisfies crimeRow
+						crimeType: row[1],
+						timePeriod: formatTimePeriod(row[2]),
+						incidentCount: row[3]
+					}) satisfies CrimeRow
 			);
 
-			// group by demographics and proportion
-			const demographicMap = new Map<
-				string,
-				{
-					label: string;
-					monthlyData: Map<string, number>;
-				}
-			>();
-
-			// track most common crime committed at that location from all those crimes
-			const crimeStats = $state(new Map<string, Map<string, { crime: string; count: number }>>());
-
-			// TODO fix map generation
+			// group data by crime type
+			const crimeMap = new Map<string, Map<string, number>>();
 			typedRows.forEach((row) => {
-				let key = '';
-
-				// set key to region name of crime commited
-				for (const [regionName, areas] of LA_REGIONS_MAP.entries()) {
-					if (areas.includes(row.location)) {
-						key = regionName;
-					}
+				if (!crimeMap.has(row.crimeType)) {
+					crimeMap.set(row.crimeType, new Map());
 				}
-				// if this region deoesnt exist, store date -> crime data in new map
-				if (!crimeStats.has(key)) {
-					crimeStats.set(key, new Map());
-				}
-				// get map of all dates for this region or if we havnt tracked this date yet, instantiate it
-				const regionMap = crimeStats.get(key)!;
-				if (!regionMap.has(row.date)) {
-					regionMap.set(row.date, { crime: row.crimeDesc, count: 0 });
-				}
-				// get current crime stats on this date, store most committed crime
-				const currentStats = regionMap.get(row.date)!;
-				if (row.incidentCount > currentStats.count) {
-					currentStats.crime = row.crimeDesc;
-					currentStats.count = row.incidentCount;
-				}
-
-				if (!demographicMap.has(key)) {
-					demographicMap.set(key, {
-						label: key,
-						monthlyData: new Map()
-					});
-				}
-				// get all demographic data at region
-				const entry = demographicMap.get(key)!;
-
-				// get current incident count
-				const currentCount = entry.monthlyData.get(row.date) || 0;
-
-				// add new incidents to total count for this date
-				entry.monthlyData.set(row.date, currentCount + row.incidentCount);
+				const timeMap = crimeMap.get(row.crimeType)!;
+				timeMap.set(row.timePeriod, row.incidentCount);
 			});
 
-			// convert datasets
-			const datasets = Array.from(demographicMap.values())
-				.map(
-					(demo, index) =>
-						({
-							label: demo.label,
-							data: Array.from(demo.monthlyData.values()),
-							borderColor: getChartColor(index),
-							fill: false
-						}) satisfies DataSet
-				)
+			// set datasets
+			const datasets = Array.from(crimeMap.entries())
+				.map(([crimeType, data], index) => ({
+					label: crimeType,
+					data: Array.from(data.values()),
+					borderColor: getChartColor(index),
+					fill: false
+				}))
 				.sort(
-					(a: DataSet, b: DataSet) =>
-						b.data.reduce((sum: number, val: number) => sum + val, 0) -
-						a.data.reduce((sum: number, val: number) => sum + val, 0)
+					(a, b) =>
+						b.data.reduce((sum, val) => sum + val, 0) - a.data.reduce((sum, val) => sum + val, 0)
 				)
 				.slice(0, 10);
 
-			// sort months chronilogically
-			const months = [...new Set(typedRows.map((row) => row.date))].sort(
-				(a, b) => new Date(a).getTime() - new Date(b).getTime()
-			);
+			// get time periods in chronological order
+			const timePeriods = [...new Set(typedRows.map((row) => row.timePeriod))];
+			const sortTimePeriods = (a: string, b: string) => {
+				if (a.startsWith('Q') && b.startsWith('Q')) {
+					const [aQ, aY] = a.split(' ');
+					const [bQ, bY] = b.split(' ');
+					return aY === bY ? aQ.localeCompare(bQ) : aY.localeCompare(bY);
+				}
+				return new Date(a).getTime() - new Date(b).getTime();
+			};
+			timePeriods.sort(sortTimePeriods);
 
-			// instantiate chart
 			chart = new Chart(chartCanvas, {
 				type: 'line',
 				data: {
-					labels: months,
+					labels: timePeriods,
 					datasets
 				},
 				options: {
@@ -205,18 +153,8 @@
 						tooltip: {
 							callbacks: {
 								label: (context) => {
-									// retrieve total incidents
 									const value = context.raw as number;
-
-									// get crime and incident count per region and date
-									const region = context.dataset.label;
-									const date = months[context.dataIndex];
-									const stats = region ? crimeStats.get(region)?.get(date) : undefined;
-
-									return [
-										`${value} incidents`,
-										`Most common crime: ${stats?.crime || 'None'} with: ${stats?.count || 0} incidents`
-									];
+									return `${context.dataset.label}: ${value} incidents`;
 								}
 							}
 						}
@@ -232,23 +170,16 @@
 						x: {
 							title: {
 								display: true,
-								text: 'Month/Year'
+								text:
+									formData.timeGranularity === 'Year'
+										? 'Year'
+										: formData.timeGranularity === 'Quarter'
+											? 'Quarter'
+											: 'Month/Year'
 							},
 							ticks: {
-								callback: function (index) {
-									// extra spacing after december
-									const label = months[index as number];
-									return label?.includes('Dec') ? label + '   ' : label;
-								},
-								maxRotation: 45, // angle labels
+								maxRotation: 45,
 								minRotation: 45
-							},
-							grid: {
-								color: (context) => {
-									// mark year changes
-									const label = months[context.index];
-									return label?.includes('Jan') ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)';
-								}
 							}
 						}
 					}

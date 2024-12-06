@@ -16,13 +16,7 @@ export async function load({ url }) {
 
 	// Check if filters are applied
 	const hasFilters =
-		cP.crimeCategories?.length > 0 ||
-		cP.laRegions?.length > 0 ||
-		cP.startDate ||
-		cP.endDate ||
-		cP.descent ||
-		cP.gender ||
-		cP.ageRange;
+		cP.crimeCategories?.length > 0 || cP.laRegions?.length > 0 || cP.startDate || cP.endDate;
 
 	if (!hasFilters) {
 		// No filters, return empty result
@@ -44,7 +38,14 @@ export async function load({ url }) {
 			ct.DESCRIPTION AS CRIME_TYPE,
 			CASE 
 				WHEN '${cP.timeGranularity}' = 'Year' THEN TO_CHAR(ci.INCIDENTDATE, 'YYYY')
-				WHEN '${cP.timeGranularity}' = 'Quarter' THEN TO_CHAR(ci.INCIDENTDATE, 'YYYY') || '-Q' || TO_CHAR(ci.INCIDENTDATE, 'Q')
+				WHEN '${cP.timeGranularity}' = 'Quarter' THEN 
+					TO_CHAR(ci.INCIDENTDATE, 'YYYY') || '-Q' || 
+					CASE 
+						WHEN EXTRACT(MONTH FROM ci.INCIDENTDATE) BETWEEN 1 AND 3 THEN '1'
+						WHEN EXTRACT(MONTH FROM ci.INCIDENTDATE) BETWEEN 4 AND 6 THEN '2'
+						WHEN EXTRACT(MONTH FROM ci.INCIDENTDATE) BETWEEN 7 AND 9 THEN '3'
+						WHEN EXTRACT(MONTH FROM ci.INCIDENTDATE) BETWEEN 10 AND 12 THEN '4'
+					END
 				WHEN '${cP.timeGranularity}' = 'Month' THEN TO_CHAR(ci.INCIDENTDATE, 'YYYY-MM')
 			END AS TIME_PERIOD
 		FROM 
@@ -63,20 +64,20 @@ export async function load({ url }) {
 			${locations.length ? `AND l.AREA IN ('${locations.join("','")}')` : ''}
 			${cP.startDate ? `AND ci.INCIDENTDATE >= TO_DATE('${cP.startDate}', 'YYYY-MM-DD')` : ''}
 			${cP.endDate ? `AND ci.INCIDENTDATE <= TO_DATE('${cP.endDate}', 'YYYY-MM-DD')` : ''}
-	)
-		SELECT 
-			CRIMECODE,
-			CRIME_TYPE,
-			TIME_PERIOD,
-			COUNT(*) AS INCIDENT_COUNT
-		FROM 
-			CrimeData
-		GROUP BY 
-			CRIMECODE,
-			CRIME_TYPE,
-			TIME_PERIOD
-		ORDER BY 
-			TIME_PERIOD ASC, INCIDENT_COUNT DESC`;
+		)
+	SELECT 
+		CRIMECODE,
+		CRIME_TYPE,
+		TIME_PERIOD,
+		COUNT(*) AS INCIDENT_COUNT
+	FROM 
+		CrimeData
+	GROUP BY 
+		CRIMECODE,
+		CRIME_TYPE,
+		TIME_PERIOD
+	ORDER BY 
+		TIME_PERIOD ASC, INCIDENT_COUNT DESC`;
 
 	// Execute the query
 	const result = await connection.execute(query);
