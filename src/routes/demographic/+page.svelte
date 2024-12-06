@@ -169,8 +169,6 @@
 			});
 
 			// convert datasets
-
-			// TODO smooth out jagged lines in graph
 			const datasets = Array.from(demographicMap.values())
 				.map(
 					(demo, index) =>
