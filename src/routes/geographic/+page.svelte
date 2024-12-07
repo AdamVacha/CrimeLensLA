@@ -25,8 +25,8 @@
 
 	// Form Data Storage (empty string by default or URL loaded)
 	let formData = $state({
-		startDate: data.formParams.startDate ?? '',
-		endDate: data.formParams.endDate ?? '',
+		startDate: data.formParams.startDate ?? '2020-01-01',
+		endDate: data.formParams.endDate ?? '2024-09-02',
 		crimeCategories: data.formParams.crimeCategories,
 		laRegions: data.formParams.laRegions
 	});
@@ -306,11 +306,11 @@
 			</h1>
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[28%_70%]">
 				<!-- Left Column: Controls -->
-				<div class="space-y-6 text-base">
+				<div class="space-y-8 text-base">
 					<h2 class="text-grey text-grey-700 mb-2 text-lg">
 						“Which neighborhoods in Los Angeles have experienced the highest or lowest crime rates,
 						and how has this changed over time?” <div
-							class="in-line tooltip tooltip-right"
+							class="in-line tooltip tooltip-right z-10"
 							data-tip="	This query focuses on the geographic distribution of crimes across different neighborhoods
 					or reporting districts in Los Angeles."
 						>
@@ -329,8 +329,6 @@
 						<DateRangePicker
 							startDate={formData.startDate}
 							endDate={formData.endDate}
-							minDate="2020-01-01"
-							maxDate="2024-11-15"
 							onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
 							onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
 						/>
