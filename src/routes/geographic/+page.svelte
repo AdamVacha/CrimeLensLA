@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-
 	import { Chart } from 'chart.js/auto';
-
 	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import CrimeCategoriesSelect from '$lib/components/CrimeCategoriesSelect.svelte';
 	import LaRegionSelect from '$lib/components/LaRegionSelect.svelte';
@@ -10,9 +8,7 @@
 	import { getChartColor } from '$lib/utils/chart-colors';
 	import QueryModal from '$lib/components/QueryModal.svelte';
 	import { LA_REGIONS_MAP } from '$lib/utils/location-map';
-
 	import { onMount } from 'svelte';
-
 	import 'leaflet/dist/leaflet.css';
 	import type { Map as LeafletMap } from 'leaflet';
 	import { getRegionBoundaries, getRegionColor } from '$lib/utils/location-map';
@@ -68,6 +64,8 @@
 
 		const regionTotals = new Map<string, number>();
 		const regionStats = new Map<string, { crime: string; count: number }>();
+		const regionColors = new Map<string, string>();
+		let colorIndex = 0;
 
 		crimeData.forEach((row) => {
 			let region = '';
@@ -79,6 +77,12 @@
 					if (!regionStats.has(region) || row.incidentCount > regionStats.get(region)!.count) {
 						regionStats.set(region, { crime: row.crimeType, count: row.incidentCount });
 					}
+
+					if (!regionColors.has(region)) {
+						regionColors.set(region, getChartColor(colorIndex));
+						colorIndex++;
+					}
+
 					break;
 				}
 			}
@@ -89,7 +93,8 @@
 				const stats = regionStats.get(region);
 
 				L.polygon(boundaries, {
-					color: getRegionColor(totalIncidents),
+					color: regionColors.get(region),
+					fillColor: regionColors.get(region),
 					fillOpacity: 0.01
 				}).addTo(map).bindPopup(`
         <div class="p-2">
@@ -294,13 +299,12 @@
 </script>
 
 <form method="POST" onsubmit={handleSubmission}>
-	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
-		<div class="max-w-8xl w-full rounded-lg bg-gray-100 p-10 pb-20 shadow-lg">
+		<div class="max-w-8xl h-[160vh] w-full rounded-lg bg-gray-100 p-10 pb-20 shadow-lg">
 			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
 				Geographic Variation in Crime
 			</h1>
-			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
+			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[28%_70%]">
 				<!-- Left Column: Controls -->
 				<div class="space-y-6 text-base">
 					<h2 class="text-grey text-grey-700 mb-2 text-lg">
@@ -358,27 +362,31 @@
 				</div>
 
 				<!-- Right Column: Chart + Map -->
-				<div
-					class="relative flex items-center justify-center rounded-lg bg-gray-200 p-6 shadow-inner"
-				>
-					<div class="relative grid h-[80vh] w-full grid-rows-2 gap-4">
+				<div class="relative flex h-[130vh] rounded-lg bg-gray-200 p-6 shadow-inner">
+					<div class="relative grid w-full grid-rows-2 gap-4">
 						{#if isLoading}
 							<div
-								class="bg-grey-100/80 absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"
 							>
-								<div class="text-center">
+								<div class="flex flex-col items-center">
 									<div
 										class="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"
 									></div>
-									<p class="text-grey-700 text-lg font-medium">Generating Chart...</p>
+									<p class="text-grey-700 mt-4 text-lg font-medium">Generating Chart...</p>
 								</div>
 							</div>
 						{/if}
-						<div bind:this={mapElement}></div>
-						<canvas bind:this={chartCanvas}></canvas>
-					</div>
-					<div class="absolute bottom-6 right-6">
-						<QueryModal {query} />
+						<div
+							class="relative h-[60vh]"
+							bind:this={mapElement}
+							style="z-index: {isLoading ? '-1' : '1'}"
+						></div>
+						<div class="h-[60vh] w-full pb-10 pt-2">
+							<canvas bind:this={chartCanvas}></canvas>
+						</div>
+						<div class="absolute bottom-1 right-1">
+							<QueryModal {query} />
+						</div>
 					</div>
 				</div>
 			</div>

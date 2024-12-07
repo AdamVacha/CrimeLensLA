@@ -27,7 +27,7 @@
 	buttonLink="/long-term"
 />
 <InvertedFeatureCard
-	imageSrc="/images/Long-term.png"
+	imageSrc="/images/Demographic.png"
 	title="Demographic Influence on Crime"
 	description="Understand the influence of demographic factors like age, gender, and descent on crime patterns. Filter by specific regions and crime types to get detailed insights."
 	buttonText="Explore by Demographics"

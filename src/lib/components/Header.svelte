@@ -3,7 +3,7 @@
 		<a href="/" class="btn btn-ghost ms-16 text-lg">CrimeLens LA</a>
 	</div>
 	<div class="me-20 flex-none">
-		<div class="dropdown dropdown-end">
+		<div class="dropdown dropdown-end z-50">
 			<label tabindex="0" class="btn btn-ghost m-1 text-lg"
 				>Explore Trends
 				<svg
