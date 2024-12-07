@@ -21,7 +21,7 @@
 	// Form Data Storage (empty string by default or URL loaded)
 	let formData = $state({
 		startDate: data.formParams.startDate ?? '2020-01-01',
-		endDate: data.formParams.endDate ?? '2020-06-30',
+		endDate: data.formParams.endDate ?? '2024-09-02',
 		crimeCategories: data.formParams.crimeCategories,
 		laRegions: data.formParams.laRegions,
 		filterBy: data.formParams.filterBy ?? 'Season',
@@ -381,8 +381,6 @@
 						<DateRangePicker
 							startDate={formData.startDate}
 							endDate={formData.endDate}
-							minDate="2020-01-01"
-							maxDate="2024-11-15"
 							onStartDateChange={(newDate: any) => (formData.startDate = newDate)}
 							onEndDateChange={(newDate: any) => (formData.endDate = newDate)}
 						/>

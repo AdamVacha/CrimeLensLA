@@ -21,7 +21,7 @@
 	// Form Data Storage (empty string by default or URL loaded)
 	let formData = $state({
 		startDate: data.formParams.startDate ?? '2020-01-01',
-		endDate: data.formParams.endDate ?? '2024-12-31',
+		endDate: data.formParams.endDate ?? '2024-09-02',
 		crimeCategories: data.formParams.crimeCategories,
 		laRegions: data.formParams.laRegions,
 		timeGranularity: data.formParams.timeGranularity ?? 'Year'
