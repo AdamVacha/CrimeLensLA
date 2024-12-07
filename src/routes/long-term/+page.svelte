@@ -190,15 +190,14 @@
 </script>
 
 <form method="POST" onsubmit={handleSubmission}>
-	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
 		<div class="max-w-8xl w-full rounded-lg bg-gray-100 p-10 pb-20 shadow-lg">
 			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
 				Long-Term Crime Trends
 			</h1>
-			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[35%_62%]">
+			<div class="grid grid-cols-1 gap-8 lg:grid-cols-[28%_70%]">
 				<!-- Left Column: Controls -->
-				<div class="space-y-6 text-base">
+				<div class="space-y-8 text-base">
 					<h2 class="text-grey text-grey-700 mb-2 text-lg">
 						“How have different types of crimes evolved in Los Angeles from 2020 to present?”
 						<div
@@ -287,13 +286,13 @@
 					<div class="relative h-[90vh] w-full">
 						{#if isLoading}
 							<div
-								class="bg-grey-100/80 inset-0 ml-2 flex items-center justify-center backdrop-blur-sm"
+								class="bg-grey-100/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm"
 							>
-								<div class="text-center">
+								<div class="flex flex-col items-center">
 									<div
 										class="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"
 									></div>
-									<p class="text-grey-700 text-lg font-medium">Generating Chart...</p>
+									<p class="text-grey-700 mt-4 text-lg font-medium">Generating Chart...</p>
 								</div>
 							</div>
 						{/if}
