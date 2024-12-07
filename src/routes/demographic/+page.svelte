@@ -280,7 +280,6 @@
 </script>
 
 <form method="POST" onsubmit={handleSubmission}>
-	{JSON.stringify(formData)}
 	<div class="flex min-h-screen justify-center p-10 text-black">
 		<div class="max-w-8xl w-full rounded-lg bg-gray-100 p-10 pb-20 shadow-lg">
 			<h1 class="mb-16 mt-8 text-center text-2xl font-semibold text-black">
